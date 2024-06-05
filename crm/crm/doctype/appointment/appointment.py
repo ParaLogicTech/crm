@@ -6,7 +6,7 @@ import frappe
 from frappe import _
 from frappe.utils.status_updater import StatusUpdater
 from frappe.utils import (
-	cint, today, getdate, get_time, get_datetime, combine_datetime, date_diff, comma_or,
+	cint, today, getdate, get_time, get_datetime, combine_datetime, date_diff, comma_or, get_link_to_form,
 	format_datetime, formatdate, now_datetime, add_days, clean_whitespace
 )
 from crm.crm.doctype.sales_person.sales_person import get_sales_person_from_user
@@ -44,12 +44,30 @@ class Appointment(StatusUpdater):
 		self.set_scheduled_reminder_onload()
 
 	def validate(self):
+		self.validate_duplicate_appointment()
 		self.set_missing_values()
 		self.validate_previous_appointment()
 		self.validate_timeslot_validity()
 		self.validate_timeslot_availability()
 		self.clean_remarks()
 		self.set_status()
+
+	def validate_duplicate_appointment(self):
+		existing_appointment = frappe.db.get_value(
+			'Appointment',
+			{
+				'scheduled_date': self.scheduled_date,
+				'appointment_type': self.appointment_type,
+				'applies_to_vehicle': self.applies_to_vehicle,
+				'docstatus': ['<', 2],
+				'name': ['!=', self.name]
+			},
+		)
+		if existing_appointment:
+			link = frappe.utils.get_link_to_form("Appointment", existing_appointment)
+			frappe.throw(
+				_("An appointment already exists: {0}").format(link)
+			)
 
 	def before_update_after_submit(self):
 		if self.status not in ["Closed", "Rescheduled"]:
