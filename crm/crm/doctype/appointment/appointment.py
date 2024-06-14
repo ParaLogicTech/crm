@@ -44,7 +44,8 @@ class Appointment(StatusUpdater):
 		self.set_scheduled_reminder_onload()
 
 	def validate(self):
-		self.validate_duplicate_appointment()
+		if self.is_duplicate_validation_enabled():
+			self.validate_duplicate_appointment()
 		self.set_missing_values()
 		self.validate_previous_appointment()
 		self.validate_timeslot_validity()
@@ -52,6 +53,10 @@ class Appointment(StatusUpdater):
 		self.clean_remarks()
 		self.set_status()
 
+	def is_duplicate_validation_enabled(self):
+		return frappe.db.get_value('Appointment Type', self.appointment_type, 'validate_duplicate_appointment')
+
+	frappe.whitelist()
 	def validate_duplicate_appointment(self):
 		existing_appointment = frappe.db.get_value(
 			'Appointment',

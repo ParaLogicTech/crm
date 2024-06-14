@@ -41,6 +41,7 @@ fixtures = [
 			"name": ["in", [
 				"Contact Us Settings-default_lead_source",
 				"Contact Query Option-opportunity_type",
+				"Appointment Type-validate_duplicate_appointment"
 			]]
 		}
 	},
