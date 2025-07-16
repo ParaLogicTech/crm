@@ -204,15 +204,15 @@ def get_customer_details(args):
 		args = json.loads(args)
 
 	args = frappe._dict(args)
+	out = frappe._dict()
 
 	if not args.feedback_from or not args.party_name:
-		frappe.throw(_("Party is mandatory"))
+		return out
 
 	feedback_controller = get_controller("Customer Feedback")
 	feedback_controller.validate_feedback_from(args.feedback_from)
 
 	party = frappe.get_cached_doc(args.feedback_from, args.party_name)
-	out = frappe._dict()
 
 	if party.doctype == "Lead":
 		out.customer_name = party.company_name or party.lead_name
