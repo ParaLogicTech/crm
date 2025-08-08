@@ -826,7 +826,6 @@ def send_appointment_reminder_notifications():
 	frappe.db.set_global("appointment_reminder_notification_last_sent_date", reminder_date)
 
 
-@frappe.whitelist()
 def send_appointment_missed_notifications():
 	if not automated_missed_notification_enabled():
 		return
