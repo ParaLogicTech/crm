@@ -606,29 +606,28 @@ def get_appointment_timeslots(scheduled_date, appointment_type, appointment=None
 	no_of_agents = cint(appointment_type_doc.number_of_agents)
 
 	if timeslots:
+		from_dt = timeslots[0][0]
+		to_dt = timeslots[-1][1]
+		booked_appointments = get_appointments_in_slot(
+			from_dt,
+			to_dt,
+			appointment_type=appointment_type,
+			appointment=appointment,
+		)
+
+		allowed_sales_persons = []
+		if include_available_agents:
+			allowed_sales_persons = get_allowed_sales_persons(appointment_type)
+
 		for timeslot_start, timeslot_end in timeslots:
-			appointments_in_slot = get_appointments_in_slot(
+			timeslot_data = make_timeslot_obj(
 				timeslot_start,
 				timeslot_end,
-				appointment_type=appointment_type,
-				appointment=appointment,
+				booked_appointments,
+				no_of_agents,
+				include_available_agents=include_available_agents,
+				allowed_sales_persons=allowed_sales_persons,
 			)
-			no_of_booked_slots = len(appointments_in_slot)
-
-			timeslot_data = {
-				'timeslot_start': timeslot_start,
-				'timeslot_end': timeslot_end,
-				'timeslot_duration': round((timeslot_end - timeslot_start) / datetime.timedelta(minutes=1)),
-				'number_of_agents': no_of_agents,
-				'booked': no_of_booked_slots,
-				'available': max(0, no_of_agents - no_of_booked_slots)
-			}
-
-			if include_available_agents:
-				allowed_sales_persons = get_allowed_sales_persons(appointment_type)
-				booked_agents = {app.sales_person for app in appointments_in_slot if app.sales_person}
-				available_agents = [agent for agent in allowed_sales_persons if agent not in booked_agents]
-				timeslot_data['available_agents'] = available_agents
 
 			out.timeslots.append(timeslot_data)
 
@@ -636,6 +635,99 @@ def get_appointment_timeslots(scheduled_date, appointment_type, appointment=None
 		out.timeslots = None
 
 	return out
+
+
+@frappe.whitelist()
+def get_appointment_timeslots_for_daterange(appointment_type, from_date, to_date):
+	appointment_type_doc = frappe.get_cached_doc("Appointment Type", appointment_type)
+	no_of_agents = cint(appointment_type_doc.number_of_agents)
+
+	from_date = getdate(from_date)
+	to_date = getdate(to_date)
+	if to_date < from_date:
+		frappe.throw(_("To Date cannot be before From Date"))
+
+	booked_appointments = get_appointments_in_slot(
+		start_dt=combine_datetime(from_date, datetime.time.min),
+		end_dt=combine_datetime(to_date, datetime.time.max),
+		appointment_type=appointment_type,
+	)
+	booked_appointments_map = {}
+	for d in booked_appointments:
+		booked_appointments_map.setdefault(d.scheduled_date, []).append(d)
+
+	holidays_set = set(appointment_type_doc.get_holidays(from_date, to_date))
+
+	dates_map = {}
+	current_date = from_date
+	while current_date <= to_date:
+		timeslots = appointment_type_doc.get_timeslots(current_date) or []
+
+		date_obj = frappe._dict({
+			"date": current_date,
+			"no_of_timeslots": len(timeslots),
+			"available_timeslots": 0,
+			"is_holiday": True if current_date in holidays_set else False,
+		})
+
+		timeslot_objs = []
+		for timeslot_start, timeslot_end in timeslots:
+			timeslot_obj = make_timeslot_obj(
+				timeslot_start,
+				timeslot_end,
+				booked_appointments_map.get(current_date, []),
+				no_of_agents,
+			)
+			timeslot_objs.append(timeslot_obj)
+
+			if timeslot_obj.available:
+				date_obj.available_timeslots += 1
+
+		date_obj.timeslots = timeslot_objs
+
+		dates_map[current_date] = date_obj
+		current_date += datetime.timedelta(days=1)
+
+	out = list(dates_map.values())
+	return out
+
+
+def make_timeslot_obj(
+	timeslot_start,
+	timeslot_end,
+	booked_appointments,
+	no_of_agents,
+	include_available_agents=False,
+	allowed_sales_persons=None,
+):
+	timeslot_start = get_datetime(timeslot_start)
+	timeslot_end = get_datetime(timeslot_end)
+	booked_appointments = booked_appointments or []
+	no_of_agents = cint(no_of_agents)
+	allowed_sales_persons = allowed_sales_persons or []
+
+	appointments_in_slot = []
+	for apt in booked_appointments:
+		if timeslot_start < apt.end_dt and timeslot_end > apt.scheduled_dt:
+			appointments_in_slot.append(apt)
+
+	no_of_booked_slots = len(appointments_in_slot)
+
+	timeslot_obj = frappe._dict({
+		'timeslot_start': timeslot_start,
+		'timeslot_end': timeslot_end,
+		'timeslot_duration': round((timeslot_end - timeslot_start) / datetime.timedelta(minutes=1)),
+		'number_of_agents': no_of_agents,
+		'booked': no_of_booked_slots,
+		'available': max(0, no_of_agents - no_of_booked_slots)
+	})
+
+	if include_available_agents:
+		booked_agents = {app.sales_person for app in appointments_in_slot if app.sales_person}
+		available_agents = [agent for agent in allowed_sales_persons if agent not in booked_agents]
+		timeslot_obj['available_agents'] = available_agents
+
+	return timeslot_obj
 
 
 def get_allowed_sales_persons(appointment_type):
@@ -673,7 +765,7 @@ def get_appointments_in_slot(start_dt, end_dt, appointment_type=None, appointmen
 		exclude_condition = "and name != %(appointment)s"
 
 	appointments = frappe.db.sql(f"""
-		select name, sales_person
+		select name, scheduled_date, scheduled_dt, end_dt, sales_person
 		from `tabAppointment`
 		where docstatus = 1 and status != 'Rescheduled'
 			and %(start_dt)s < end_dt AND %(end_dt)s > scheduled_dt

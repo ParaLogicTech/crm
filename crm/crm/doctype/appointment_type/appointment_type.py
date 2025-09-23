@@ -109,6 +109,9 @@ class AppointmentType(Document):
 	def is_holiday(self, date):
 		return False
 
+	def get_holidays(self, from_date, to_date):
+		return []
+
 	def get_sales_persons(self):
 		return [d.sales_person for d in self.sales_persons]
 
