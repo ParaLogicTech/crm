@@ -13,7 +13,11 @@ from frappe.contacts.doctype.address.address import get_default_address
 from frappe.contacts.doctype.contact.contact import get_default_contact, get_all_contact_nos
 from crm.crm.utils import get_contact_details, get_address_display
 from crm.crm.doctype.sales_person.sales_person import get_sales_person_from_user
-from frappe.core.doctype.notification_count.notification_count import get_all_notification_count
+from frappe.core.doctype.notification_count.notification_count import (
+	get_all_notification_count,
+	get_notification_last_scheduled,
+	set_notification_last_scheduled,
+)
 from frappe.email.doctype.notification.notification import has_notification
 from frappe.model.mapper import get_mapped_doc
 import datetime
@@ -905,8 +909,13 @@ def send_appointment_reminder_notifications():
 	if now_dt < reminder_dt:
 		return
 
-	notification_last_sent_date = frappe.db.get_global("appointment_reminder_notification_last_sent_date")
-	if notification_last_sent_date and getdate(notification_last_sent_date) >= reminder_date:
+	last_scheduled = get_notification_last_scheduled(
+		"Appointment",
+		"",
+		"Appointment Reminder",
+		"",
+	)
+	if last_scheduled and getdate(last_scheduled) >= reminder_date:
 		return
 
 	appointments_to_remind = get_appointments_for_reminder_notification(reminder_date)
@@ -915,7 +924,13 @@ def send_appointment_reminder_notifications():
 		doc = frappe.get_doc("Appointment", name)
 		doc.send_appointment_reminder_notification()
 
-	frappe.db.set_global("appointment_reminder_notification_last_sent_date", reminder_date)
+	set_notification_last_scheduled(
+		"Appointment",
+		"",
+		"Appointment Reminder",
+		"",
+		now_dt=now_dt,
+	)
 
 
 def send_appointment_missed_notifications():
@@ -929,8 +944,13 @@ def send_appointment_missed_notifications():
 	if now_dt < notification_dt:
 		return
 
-	notification_last_sent_date = frappe.db.get_global("appointment_missed_notification_last_sent_date")
-	if notification_last_sent_date and getdate(notification_last_sent_date) >= notification_date:
+	last_scheduled = get_notification_last_scheduled(
+		"Appointment",
+		"",
+		"Appointment Missed",
+		"",
+	)
+	if last_scheduled and getdate(last_scheduled) >= notification_date:
 		return
 
 	appointments_to_notify = get_appointments_for_missed_notification(notification_date)
@@ -939,7 +959,13 @@ def send_appointment_missed_notifications():
 		doc = frappe.get_doc("Appointment", name)
 		doc.send_appointment_missed_notification()
 
-	frappe.db.set_global("appointment_missed_notification_last_sent_date", notification_date)
+	set_notification_last_scheduled(
+		"Appointment",
+		"",
+		"Appointment Missed",
+		"",
+		now_dt=now_dt,
+	)
 
 
 def automated_reminder_enabled():
