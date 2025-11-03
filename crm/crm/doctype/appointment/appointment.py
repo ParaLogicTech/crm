@@ -522,7 +522,7 @@ class Appointment(StatusUpdater):
 				if throw:
 					frappe.throw(_("Cannot send Appointment Cancellation notification because Appointment is not cancelled"))
 				return False
-		else:
+		elif notification_type in ("Appointment Confirmation", "Appointment Reminder", "Appointment Missed"):
 			# Must be submitted
 			if self.docstatus != 1:
 				if throw:
