@@ -117,8 +117,11 @@ class Opportunity(StatusUpdater):
 		self.sales_person_email = sales_person.contact_email
 
 	def validate_contact_no(self):
-		contact_no_mandotory = cint(frappe.db.get_single_value("CRM Settings", "opportunity_contact_no_mandatory"))
-		if contact_no_mandotory and not (self.contact_phone or self.contact_mobile):
+		if self.flags.ignore_mandatory:
+			return
+
+		contact_no_mandatory = cint(frappe.db.get_single_value("CRM Settings", "opportunity_contact_no_mandatory"))
+		if contact_no_mandatory and not (self.contact_phone or self.contact_mobile):
 			frappe.throw(_("Contact No is mandatory"))
 
 	def validate_follow_up(self):
