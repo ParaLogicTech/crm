@@ -95,6 +95,9 @@ class Lead(StatusUpdater):
 		return self.has_opportunity()
 
 	def has_opportunity(self):
+		if self.is_new():
+			return False
+
 		return frappe.db.get_value("Opportunity", {
 			"opportunity_from": "Lead", "party_name": self.name, "status": ["!=", "Lost"]
 		})
@@ -103,6 +106,9 @@ class Lead(StatusUpdater):
 		return self.has_lost_opportunity()
 
 	def has_lost_opportunity(self):
+		if self.is_new():
+			return False
+
 		return frappe.db.get_value("Opportunity", {
 			"opportunity_from": "Lead", "party_name": self.name, "status": ["=", "Lost"]
 		})
@@ -111,6 +117,9 @@ class Lead(StatusUpdater):
 		return self.has_converted_opportunity()
 
 	def has_converted_opportunity(self):
+		if self.is_new():
+			return False
+
 		return frappe.db.get_value("Opportunity", {
 			"opportunity_from": "Lead", "party_name": self.name, "status": ["=", "Converted"]
 		})
