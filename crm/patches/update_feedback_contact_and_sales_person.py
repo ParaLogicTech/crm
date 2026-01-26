@@ -1,5 +1,5 @@
 import frappe
-from crm.crm.utils import get_contact_details
+from crm.crm.utils import _get_contact_details
 from frappe.contacts.doctype.contact.contact import get_default_contact
 
 user_to_sales_person = {}
@@ -31,7 +31,7 @@ def execute():
 			contact_person = get_default_contact(fb.feedback_from, fb.party_name)
 
 		if contact_person:
-			contact_details = get_contact_details(contact_person, lead=lead) or {}
+			contact_details = _get_contact_details(contact_person, lead=lead) or {}
 			frappe.db.set_value("Customer Feedback", fb.name, {
 				"contact_person": contact_person,
 				"contact_display": contact_details.get("contact_display"),

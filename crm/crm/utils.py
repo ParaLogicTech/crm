@@ -4,16 +4,20 @@ from frappe.utils import cstr
 
 @frappe.whitelist()
 def get_address_display(address=None, lead=None):
-	from frappe.contacts.doctype.address.address import get_address_display
+	return render_address(address, lead=lead, check_permissions=True)
+
+
+def render_address(address=None, lead=None, check_permissions=False):
+	from frappe.contacts.doctype.address.address import render_address
 	from crm.crm.doctype.lead.lead import get_lead_address_details
 
 	out = None
 
 	if address:
-		out = get_address_display(address)
+		out = render_address(address, check_permissions=check_permissions)
 	elif lead:
-		lead_address_details = get_lead_address_details(lead)
-		out = get_address_display(lead_address_details)
+		lead_address_details = get_lead_address_details(lead, check_permissions=check_permissions)
+		out = render_address(lead_address_details)
 
 	return out
 
@@ -26,22 +30,39 @@ def get_contact_details(
 	link_doctype=None,
 	link_name=None,
 ):
-	from frappe.contacts.doctype.contact.contact import get_contact_details
+	return _get_contact_details(
+		contact,
+		lead=lead,
+		get_contact_no_list=get_contact_no_list,
+		link_doctype=link_doctype,
+		link_name=link_name,
+		check_permissions=True,
+	)
+
+
+def _get_contact_details(
+	contact=None,
+	lead=None,
+	get_contact_no_list=False,
+	link_doctype=None,
+	link_name=None,
+	check_permissions=False,
+):
+	from frappe.contacts.doctype.contact.contact import _get_contact_details
 	from crm.crm.doctype.lead.lead import _get_lead_contact_details
 
 	if contact:
-		out = get_contact_details(
+		out = _get_contact_details(
 			contact,
 			get_contact_no_list=get_contact_no_list,
 			link_doctype=link_doctype,
 			link_name=link_name,
+			check_permissions=check_permissions,
 		)
 	elif lead:
-		if isinstance(lead, str):
-			lead = frappe.get_doc("Lead", lead)
-		out = _get_lead_contact_details(lead)
+		out = _get_lead_contact_details(lead, check_permissions=check_permissions)
 	else:
-		out = get_contact_details(None)
+		out = _get_contact_details(None, check_permissions=check_permissions)
 
 	return out
 

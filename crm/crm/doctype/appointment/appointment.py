@@ -11,7 +11,7 @@ from frappe.utils import (
 )
 from frappe.contacts.doctype.address.address import get_default_address
 from frappe.contacts.doctype.contact.contact import get_default_contact, get_all_contact_nos
-from crm.crm.utils import get_contact_details, get_address_display
+from crm.crm.utils import _get_contact_details, render_address
 from crm.crm.doctype.sales_person.sales_person import get_sales_person_from_user
 from frappe.core.doctype.notification_count.notification_count import (
 	get_all_notification_count,
@@ -833,17 +833,17 @@ def get_customer_details(args):
 	if not out.customer_address and party.doctype != "Lead":
 		out.customer_address = get_default_address(party.doctype, party.name)
 
-	out.address_display = get_address_display(out.customer_address, lead=lead)
+	out.address_display = render_address(out.customer_address, lead=lead)
 
 	# Contact
 	out.contact_person = args.contact_person
 	if not out.contact_person and party.doctype != "Lead":
 		out.contact_person = get_default_contact(party.doctype, party.name)
 
-	out.update(get_contact_details(out.contact_person, lead=lead))
+	out.update(_get_contact_details(out.contact_person, lead=lead))
 
 	out.secondary_contact_person = args.secondary_contact_person
-	secondary_contact_details = get_contact_details(out.secondary_contact_person)
+	secondary_contact_details = _get_contact_details(out.secondary_contact_person)
 	secondary_contact_details = {"secondary_" + k: v for k, v in secondary_contact_details.items()}
 	out.update(secondary_contact_details)
 
@@ -878,6 +878,7 @@ def get_rescheduled_appointment(source_name, target_doc=None):
 				"customer_address": "customer_address",
 				"voice_of_customer": "voice_of_customer",
 				"description": "description",
+				"opportunity": "opportunity",
 			}
 		},
 		"postprocess": set_missing_values,

@@ -148,11 +148,15 @@ def get_lead_contact_details(lead):
 	if not lead:
 		return frappe._dict()
 
-	lead_doc = frappe.get_doc("Lead", lead)
-	return _get_lead_contact_details(lead_doc)
+	return _get_lead_contact_details(lead, check_permissions=True)
 
 
-def _get_lead_contact_details(lead):
+def _get_lead_contact_details(lead, check_permissions=False):
+	if isinstance(lead, str):
+		lead = frappe.get_doc("Lead", lead)
+		if check_permissions:
+			lead.check_permissions()
+
 	out = frappe._dict({
 		"contact_email": lead.get('email_id'),
 		"contact_mobile": lead.get('mobile_no'),
@@ -164,25 +168,25 @@ def _get_lead_contact_details(lead):
 		out["contact_display"] = ""
 		out["contact_designation"] = ""
 	else:
-		out["contact_display"] = " ".join(filter(None, [lead.salutation, lead.lead_name]))
+		out["contact_display"] = " ".join(filter(None, [lead.get("salutation"), lead.get("lead_name")]))
 		out["contact_designation"] = lead.get('designation')
 
 	return out
 
 
-def get_lead_address_details(lead):
+def get_lead_address_details(lead, check_permissions=False):
 	if not lead:
 		lead = frappe._dict()
 
-	lead_address_fields = ['address_line1', 'address_line2', 'city', 'state', 'country']
 	if isinstance(lead, str):
-		lead_address_details = frappe.db.get_value('Lead', lead,
-			fieldname=lead_address_fields,
-			as_dict=1)
-	else:
-		lead_address_details = frappe._dict()
-		for f in lead_address_fields:
-			lead_address_details[f] = lead.get(f)
+		lead = frappe.get_doc("Lead", lead)
+		if check_permissions:
+			lead.check_permissions()
+
+	lead_address_fields = ['address_line1', 'address_line2', 'city', 'state', 'country']
+	lead_address_details = frappe._dict()
+	for f in lead_address_fields:
+		lead_address_details[f] = lead.get(f)
 
 	if not lead_address_details.get('address_line1'):
 		lead_address_details = frappe._dict()

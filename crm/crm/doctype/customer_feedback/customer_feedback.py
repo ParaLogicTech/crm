@@ -11,7 +11,7 @@ from frappe.model.mapper import get_mapped_doc
 from frappe.utils import getdate, get_time, get_datetime, combine_datetime
 from frappe.contacts.doctype.contact.contact import get_default_contact
 from crm.crm.doctype.sales_person.sales_person import get_sales_person_from_user
-from crm.crm.utils import get_contact_details
+from crm.crm.utils import _get_contact_details
 import json
 
 
@@ -234,7 +234,7 @@ def get_customer_feedback_contact_details(args):
 	if not out.contact_person and party.doctype != "Lead":
 		out.contact_person = get_default_contact(party.doctype, party.name)
 
-	out.update(get_contact_details(out.contact_person, lead=lead))
+	out.update(_get_contact_details(out.contact_person, lead=lead))
 
 	frappe.utils.call_hook_method("get_customer_feedback_contact_details", args, out)
 
