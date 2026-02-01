@@ -418,7 +418,7 @@
   {
    "fieldname": "contact_phone",
    "fieldtype": "Data",
-   "label": "Phone No",
+   "label": "Landline No",
    "read_only": 1
   },
   {
@@ -498,11 +498,12 @@
    "label": "Details"
   }
  ],
+ "grid_page_length": 500,
  "icon": "fa fa-info-sign",
  "idx": 195,
  "is_calendar_and_gantt": 1,
  "links": [],
- "modified": "2025-03-17 20:12:53.209659",
+ "modified": "2026-02-01 04:40:55.387710",
  "modified_by": "Administrator",
  "module": "CRM",
  "name": "Opportunity",
@@ -556,6 +557,7 @@
    "write": 1
   }
  ],
+ "row_format": "Dynamic",
  "search_fields": "status,transaction_date,party_name,customer_name,opportunity_type",
  "sender_field": "contact_email",
  "sort_field": "transaction_date",
