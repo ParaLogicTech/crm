@@ -155,7 +155,7 @@ def _get_lead_contact_details(lead, check_permissions=False):
 	if isinstance(lead, str):
 		lead = frappe.get_doc("Lead", lead)
 		if check_permissions:
-			lead.check_permissions()
+			lead.check_permission()
 
 	out = frappe._dict({
 		"contact_email": lead.get('email_id'),
@@ -181,7 +181,7 @@ def get_lead_address_details(lead, check_permissions=False):
 	if isinstance(lead, str):
 		lead = frappe.get_doc("Lead", lead)
 		if check_permissions:
-			lead.check_permissions()
+			lead.check_permission()
 
 	lead_address_fields = ['address_line1', 'address_line2', 'city', 'state', 'country']
 	lead_address_details = frappe._dict()
