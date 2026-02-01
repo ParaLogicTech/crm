@@ -9,9 +9,8 @@ from frappe.utils import (
 	cint, today, getdate, get_time, get_datetime, combine_datetime, date_diff, comma_or,
 	format_datetime, formatdate, now_datetime, add_days, clean_whitespace, cstr,
 )
-from frappe.contacts.doctype.address.address import get_default_address
-from frappe.contacts.doctype.contact.contact import get_default_contact, get_all_contact_nos
-from crm.crm.utils import _get_contact_details, render_address
+from frappe.contacts.doctype.contact.contact import get_all_contact_nos
+from crm.crm.utils import _get_contact_details, render_address, get_primary_contact, get_primary_address
 from crm.crm.doctype.sales_person.sales_person import get_sales_person_from_user
 from frappe.core.doctype.notification_count.notification_count import (
 	get_all_notification_count,
@@ -831,14 +830,14 @@ def get_customer_details(args):
 	# Address
 	out.customer_address = args.customer_address
 	if not out.customer_address and party.doctype != "Lead":
-		out.customer_address = get_default_address(party.doctype, party.name)
+		out.customer_address = get_primary_address(party.doctype, party.name)
 
 	out.address_display = render_address(out.customer_address, lead=lead)
 
 	# Contact
 	out.contact_person = args.contact_person
 	if not out.contact_person and party.doctype != "Lead":
-		out.contact_person = get_default_contact(party.doctype, party.name)
+		out.contact_person = get_primary_contact(party.doctype, party.name)
 
 	out.update(_get_contact_details(out.contact_person, lead=lead))
 

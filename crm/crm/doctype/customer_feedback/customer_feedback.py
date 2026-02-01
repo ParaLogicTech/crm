@@ -9,9 +9,8 @@ from frappe.model.document import Document
 from frappe.utils import cstr, comma_or
 from frappe.model.mapper import get_mapped_doc
 from frappe.utils import getdate, get_time, get_datetime, combine_datetime
-from frappe.contacts.doctype.contact.contact import get_default_contact
 from crm.crm.doctype.sales_person.sales_person import get_sales_person_from_user
-from crm.crm.utils import _get_contact_details
+from crm.crm.utils import _get_contact_details, get_primary_contact
 import json
 
 
@@ -232,7 +231,7 @@ def get_customer_feedback_contact_details(args):
 
 	out.contact_person = args.contact_person
 	if not out.contact_person and party.doctype != "Lead":
-		out.contact_person = get_default_contact(party.doctype, party.name)
+		out.contact_person = get_primary_contact(party.doctype, party.name)
 
 	out.update(_get_contact_details(out.contact_person, lead=lead))
 

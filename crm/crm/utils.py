@@ -1,5 +1,36 @@
 import frappe
-from frappe.utils import cstr
+from frappe.utils import cstr, cint
+from frappe.contacts.doctype.address.address import get_default_address
+from frappe.contacts.doctype.contact.contact import get_default_contact
+
+
+@frappe.whitelist()
+def get_primary_contact(doctype, name):
+	primary_contact = frappe.utils.call_hook_method("get_primary_contact", doctype, name)
+	return primary_contact or get_default_contact(doctype, name)
+
+
+@frappe.whitelist()
+def get_primary_address(doctype, name, shipping_address=False):
+	shipping_address = cint(shipping_address)
+	if shipping_address:
+		return get_shipping_address(doctype, name)
+
+	primary_address = frappe.utils.call_hook_method("get_primary_address", doctype, name)
+	return primary_address or get_default_address(doctype, name)
+
+
+@frappe.whitelist()
+def get_shipping_address(doctype, name):
+	shipping_address = frappe.utils.call_hook_method("get_shipping_address", doctype, name)
+
+	if not shipping_address:
+		shipping_address = get_default_address(doctype, name, sort_key="is_shipping_address", primary_only=True)
+
+	if not shipping_address:
+		shipping_address = get_primary_address(doctype, name, shipping_address=False)
+
+	return shipping_address or None
 
 
 @frappe.whitelist()
