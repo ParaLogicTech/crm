@@ -18,7 +18,11 @@ class AppointmentType(Document):
 	def validate_appointment_duration(self):
 		self.appointment_duration = cint(self.appointment_duration)
 		if cint(self.appointment_duration) < 0:
-			frappe.throw(_("Appointment Duration cannot be negative"))
+			frappe.throw(_("Default Duration cannot be negative"))
+
+		for d in self.availability_of_slots:
+			if cint(d.duration) < 0:
+				frappe.throw(_("Row #{0}: Slot Duration cannot be negative").format(d.idx))
 
 	def validate_number_of_agents(self):
 		if self.get('sales_persons'):
@@ -29,19 +33,25 @@ class AppointmentType(Document):
 
 	def validate_availability_of_slots(self):
 		for record in self.availability_of_slots:
+			duration = cint(record.duration or self.appointment_duration)
 			from_time = combine_datetime("1970-01-01", record.from_time)
 			to_time = combine_datetime("1970-01-01", record.to_time)
-			self.validate_from_and_to_time(record, from_time, to_time)
-			self.duration_is_divisible(from_time, to_time)
 
-	def validate_from_and_to_time(self, record, from_time, to_time):
-		if from_time > to_time:
-			frappe.throw(_('<b>From Time</b> cannot be later than <b>To Time</b> on {0}').format(record.day_of_week))
+			if not duration:
+				frappe.throw(_("Row #{0}: Duration cannot be 0, please set default duration or slot duration").format(
+					record.idx
+				))
 
-	def duration_is_divisible(self, from_time, to_time):
-		timedelta = to_time - from_time
-		if timedelta.total_seconds() % (self.appointment_duration * 60):
-			frappe.throw(_('The difference between from time and To Time must be a multiple of Appointment Duration'))
+			if from_time > to_time:
+				frappe.throw(_("Row #{0}: <b>From Time</b> cannot be later than <b>To Time</b> on {1}").format(
+					record.idx, record.day_of_week
+				))
+
+			timedelta = to_time - from_time
+			if timedelta.total_seconds() % (duration * 60):
+				frappe.throw(_("Row #{0}: The difference between From Time and To Time must be a multiple of duration of {1} minutes").format(
+					record.idx, frappe.bold(duration)
+				))
 
 	def is_in_timeslot(self, start_dt, end_dt=None, duration=None):
 		start_dt = get_datetime(start_dt)
@@ -60,7 +70,7 @@ class AppointmentType(Document):
 		if timeslot_range is None:
 			return True
 
-		for range_start, range_end in timeslot_range:
+		for range_start, range_end, dur in timeslot_range:
 			in_range = True
 			if not time_in_range(range_start, range_end, start_dt):
 				in_range = False
@@ -78,18 +88,18 @@ class AppointmentType(Document):
 		if timeslot_range is None:
 			return None
 
-		if cint(self.appointment_duration) <= 0:
-			return None
-
-		appointment_duration = datetime.timedelta(minutes=cint(self.appointment_duration))
-
 		timeslots = []
-		for start_dt, end_dt in timeslot_range:
+		for start_dt, end_dt, duration in timeslot_range:
 			timeslot_start = start_dt
-			while timeslot_start + appointment_duration <= end_dt:
-				timeslot_end = timeslot_start + appointment_duration
+
+			duration_delta = datetime.timedelta(minutes=duration)
+			if duration <= 0:
+				continue
+
+			while timeslot_start + duration_delta <= end_dt:
+				timeslot_end = timeslot_start + duration_delta
 				timeslots.append((timeslot_start, timeslot_end))
-				timeslot_start += appointment_duration
+				timeslot_start += duration_delta
 
 		timeslots = sorted(timeslots, key=lambda d: (d[0], d[1]))
 		return timeslots
@@ -101,8 +111,27 @@ class AppointmentType(Document):
 		date = getdate(date)
 		day_of_week = frappe.utils.formatdate(date, "EEEE")
 
-		timeslot_rows = [d for d in self.availability_of_slots if d.day_of_week == day_of_week]
-		timeslot_range = [(combine_datetime(date, d.from_time), combine_datetime(date, d.to_time)) for d in timeslot_rows]
+		timeslot_rows = []
+
+		for d in self.availability_of_slots:
+			if d.day_of_week != day_of_week:
+				continue
+			if d.from_date and date < getdate(d.from_date):
+				continue
+			if d.to_date and date > getdate(d.to_date):
+				continue
+
+			timeslot_rows.append(d)
+
+		has_date_filter = any(d for d in timeslot_rows if d.from_date or d.to_date)
+		if has_date_filter:
+			timeslot_rows = [d for d in timeslot_rows if d.from_date or d.to_date]
+
+		timeslot_range = [(
+			combine_datetime(date, d.from_time),
+			combine_datetime(date, d.to_time),
+			cint(d.duration or self.appointment_duration)
+		) for d in timeslot_rows]
 
 		return timeslot_range
 
