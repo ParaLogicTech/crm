@@ -45,7 +45,7 @@ class AppointmentSheetReport(object):
 
 	def get_select_fields(self):
 		return [
-			"a.name as appointment", "a.appointment_type", "a.appointment_source", "a.sales_person",
+			"a.name as appointment", "a.appointment_type", "a.appointment_source", "a.service_advisor",
 			"a.voice_of_customer", "a.remarks",
 			"a.scheduled_dt", "a.scheduled_date", "a.scheduled_time", "a.appointment_duration", "a.end_dt",
 			"a.appointment_for", "a.party_name", "a.customer_name",
@@ -126,9 +126,9 @@ class AppointmentSheetReport(object):
 		if self.filters.get("appointment_type"):
 			conditions.append("a.appointment_type = %(appointment_type)s")
 
-		if self.filters.get("sales_person"):
-			lft, rgt = frappe.db.get_value("Sales Person", self.filters.sales_person, ["lft", "rgt"])
-			conditions.append("""a.sales_person in (select name from `tabSales Person`
+		if self.filters.get("service_advisor"):
+			lft, rgt = frappe.db.get_value("Sales Person", self.filters.service_advisor, ["lft", "rgt"])
+			conditions.append("""a.service_advisor in (select name from `tabSales Person`
 				where lft >= {0} and rgt <= {1})""".format(lft, rgt))
 
 		return conditions
@@ -148,7 +148,7 @@ class AppointmentSheetReport(object):
 		columns += [
 			{"label": _("Voice of Customer"), "fieldname": "voice_of_customer", "fieldtype": "Data", "width": 200},
 			{'label': _("Status"), 'fieldname': 'status', 'fieldtype': 'Data', 'width': 80},
-			{'label': _("Sales Person"), 'fieldname': 'sales_person', 'fieldtype': 'Link', 'options': "Sales Person", 'width': 110},
+			{'label': _("Service Advisor"), 'fieldname': 'service_advisor', 'fieldtype': 'Link', 'options': "Sales Person", 'width': 110},
 			{"label": _("Remarks"), "fieldname": "remarks", "fieldtype": "Data", "width": 200, "editable": 1},
 			{'label': _("Project"), 'fieldname': 'project', 'fieldtype': 'Link', 'width': 100, 'options': 'Project'},
 			{'label': _("Project Type"), 'fieldname': 'project_type', 'fieldtype': 'Link', 'width': 100, 'options': 'Project Type'},

@@ -1,6 +1,7 @@
 [pre_model_sync]
 crm.patches.rename_service_user_roles #1
 execute:frappe.delete_doc_if_exists("Report", "Lead Details")
+crm.patches.appointment_sales_person_to_service_advisor
 
 [post_model_sync]
 crm.patches.refactor_lead_status

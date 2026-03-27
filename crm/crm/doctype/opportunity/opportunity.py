@@ -309,7 +309,8 @@ def make_appointment(source_name, target_doc=None):
 				"applies_to_vehicle": "applies_to_vehicle",
 				"applies_to_serial_no": "applies_to_serial_no",
 				"vehicle_last_odometer": "vehicle_last_odometer",
-				"campaign": "campaign"
+				"campaign": "campaign",
+				"sales_person": "sales_person",
 			}
 		}
 	}, target_doc, set_missing_values)

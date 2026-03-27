@@ -25,8 +25,8 @@ class AppointmentType(Document):
 				frappe.throw(_("Row #{0}: Slot Duration cannot be negative").format(d.idx))
 
 	def validate_number_of_agents(self):
-		if self.get('sales_persons'):
-			self.number_of_agents = len(self.sales_persons)
+		if self.get('service_advisors'):
+			self.number_of_agents = len(self.service_advisors)
 
 		if cint(self.number_of_agents) <= 0:
 			frappe.throw(_("Number of Available Agents must be a positive number"))
@@ -141,8 +141,8 @@ class AppointmentType(Document):
 	def get_holidays(self, from_date, to_date):
 		return []
 
-	def get_sales_persons(self):
-		return [d.sales_person for d in self.sales_persons]
+	def get_service_advisors(self):
+		return [d.service_advisor for d in self.service_advisors]
 
 
 def time_in_range(start, end, x):

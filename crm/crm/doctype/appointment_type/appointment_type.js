@@ -3,7 +3,7 @@
 
 frappe.ui.form.on('Appointment Type', {
 	setup: function(frm) {
-		frm.set_query("sales_persons", () => {
+		frm.set_query("service_advisors", () => {
 			return {
 				filters: {
 					is_group: 0,

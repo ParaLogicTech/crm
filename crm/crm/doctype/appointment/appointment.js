@@ -21,7 +21,7 @@ crm.Appointment = class Appointment extends crm.QuickContacts {
 		this.frm.trigger('set_disallow_on_submit_fields_read_only');
 		this.setup_dashboard();
 
-		this.set_sales_person_from_user();
+		this.set_advisor_sales_person_from_user();
 		this.make_appointment_slot_picker();
 	}
 
@@ -54,7 +54,7 @@ crm.Appointment = class Appointment extends crm.QuickContacts {
 			return frappe.contacts.contact_query(this.frm.doc);
 		});
 
-		this.frm.set_query('sales_person', () => {
+		this.frm.set_query('service_advisor', () => {
 			let filters = {
 				appointment_type: this.frm.doc.appointment_type,
 			};
@@ -67,7 +67,7 @@ crm.Appointment = class Appointment extends crm.QuickContacts {
 			}
 
 			return {
-				query: "crm.crm.doctype.appointment.appointment.appointment_sales_person_query",
+				query: "crm.crm.doctype.appointment.appointment.appointment_service_advisor_query",
 				filters: filters,
 			}
 		});
@@ -339,14 +339,20 @@ crm.Appointment = class Appointment extends crm.QuickContacts {
 		}
 	}
 
-	set_sales_person_from_user() {
-		if (this.frm.doc.sales_person || !this.frm.doc.__islocal || this.frm.doc.docstatus != 0) {
+	set_advisor_sales_person_from_user() {
+		if (!this.frm.doc.__islocal || this.frm.doc.docstatus != 0) {
+			return;
+		}
+		if (this.frm.doc.service_advisor && this.frm.doc.sales_person) {
 			return;
 		}
 
-		crm.utils.get_sales_person_from_user(sales_person => {
-			if (sales_person) {
-				this.frm.set_value('sales_person', sales_person);
+		return crm.utils.get_advisor_sales_person_from_user(details => {
+			if (!this.frm.doc.service_advisor && details.sales_person && details.is_service_advisor) {
+				this.frm.set_value("service_advisor", details.sales_person);
+			}
+			if (!this.frm.doc.sales_person && details.sales_person) {
+				this.frm.set_value("sales_person", details.sales_person);
 			}
 		});
 	}

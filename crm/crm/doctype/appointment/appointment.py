@@ -11,7 +11,7 @@ from frappe.utils import (
 )
 from frappe.contacts.doctype.contact.contact import get_all_contact_nos
 from crm.crm.utils import _get_contact_details, render_address, get_primary_contact, get_primary_address
-from crm.crm.doctype.sales_person.sales_person import get_sales_person_from_user
+from crm.crm.doctype.sales_person.sales_person import get_advisor_sales_person_from_user
 from frappe.core.doctype.notification_count.notification_count import (
 	get_all_notification_count,
 	get_notification_last_scheduled,
@@ -19,6 +19,7 @@ from frappe.core.doctype.notification_count.notification_count import (
 )
 from frappe.email.doctype.notification.notification import has_notification
 from frappe.model.mapper import get_mapped_doc
+from frappe.model.utils import get_fetch_values
 import datetime
 import json
 
@@ -53,8 +54,8 @@ class Appointment(StatusUpdater):
 		self.set_missing_values()
 		self.validate_previous_appointment()
 		self.validate_timeslot_validity()
-		self.validate_sales_person_self()
-		self.validate_sales_person_availability()
+		self.validate_service_advisor_self()
+		self.validate_service_advisor_availability()
 		self.validate_timeslot_availability()
 		self.clean_remarks()
 		self.set_status()
@@ -63,15 +64,15 @@ class Appointment(StatusUpdater):
 		if self.status not in ["Closed", "Converted", "Rescheduled"]:
 			self.set_missing_values_after_submit()
 
-		self.validate_sales_person_self()
-		self.validate_sales_person_mandatory()
-		self.validate_sales_person_availability()
+		self.validate_service_advisor_self()
+		self.validate_service_advisor_mandatory()
+		self.validate_service_advisor_availability()
 		self.clean_remarks()
 		self.set_status()
 		self.get_disallow_on_submit_fields()
 
 	def before_submit(self):
-		self.validate_sales_person_mandatory()
+		self.validate_service_advisor_mandatory()
 		self.confirmation_dt = now_datetime()
 
 	def on_submit(self):
@@ -107,15 +108,19 @@ class Appointment(StatusUpdater):
 		return self.flags.disallow_on_submit or []
 
 	def set_missing_values(self):
+		self.set_appointment_type_details()
 		self.set_previous_appointment_details()
 		self.set_disable_automated_notifications()
 		self.set_missing_duration()
 		self.set_scheduled_date_time()
 		self.set_customer_details()
-		self.set_sales_person()
+		self.set_advisor_sales_person_from_user()
 
 	def set_missing_values_after_submit(self):
 		self.set_customer_details()
+
+	def set_appointment_type_details(self):
+		self.update(get_fetch_values(self.doctype, "appointment_type", self.appointment_type))
 
 	def set_previous_appointment_details(self):
 		if self.previous_appointment:
@@ -165,9 +170,19 @@ class Appointment(StatusUpdater):
 			if self.meta.has_field(k) and (not self.get(k) or k in self.force_party_fields):
 				self.set(k, v)
 
-	def set_sales_person(self):
-		if not self.get('sales_person') and self.is_new() and self.docstatus == 0:
-			self.sales_person = get_sales_person_from_user()
+	def set_advisor_sales_person_from_user(self):
+		if not self.is_new() or self.docstatus != 0:
+			return
+		if self.get("service_advisor") and self.get("sales_person"):
+			return
+
+		details = get_advisor_sales_person_from_user()
+
+		if not self.get("service_advisor") and details.sales_person and details.is_service_advisor:
+			self.service_advisor = details.sales_person
+
+		if not self.get("sales_person") and details.sales_person:
+			self.sales_person = details.sales_person
 
 	def clean_remarks(self):
 		fields = ['remarks']
@@ -228,72 +243,73 @@ class Appointment(StatusUpdater):
 				timeslot_str, frappe.bold(appointments_in_slot), self.appointment_type
 			), raise_exception=appointment_type_doc.validate_availability)
 
-	def validate_sales_person_self(self):
+	def validate_service_advisor_self(self):
 		if not self.appointment_type:
 			return
 
 		# check if user is sales person
-		user_sales_person = get_sales_person_from_user()
-		if not user_sales_person:
+		advisor_details = get_advisor_sales_person_from_user()
+		user_service_advisor = advisor_details.sales_person if advisor_details.is_service_advisor else None
+		if not user_service_advisor:
 			return
 
-		allowed_sales_persons = get_allowed_sales_persons(self.appointment_type)
-		if not allowed_sales_persons or user_sales_person not in allowed_sales_persons:
+		allowed_service_advisors = get_allowed_service_advisors(self.appointment_type)
+		if allowed_service_advisors and user_service_advisor not in allowed_service_advisors:
 			return
 
 		# check if not changed
-		if not self.is_new() and cstr(self.sales_person) == cstr(self.db_get("sales_person")):
+		if not self.is_new() and cstr(self.service_advisor) == cstr(self.db_get("service_advisor")):
 			return
 
-		sales_person_validate_self = frappe.get_cached_value("Appointment Type", self.appointment_type, "sales_person_validate_self")
-		if not sales_person_validate_self:
+		service_advisor_validate_self = frappe.get_cached_value("Appointment Type", self.appointment_type, "service_advisor_validate_self")
+		if not service_advisor_validate_self:
 			return
 
-		if self.sales_person and self.sales_person != user_sales_person:
-			frappe.throw(_("You are not allowed to select another {0}").format(self.meta.get_label("sales_person")))
+		if self.service_advisor and self.service_advisor != user_service_advisor:
+			frappe.throw(_("You are not allowed to select another {0}").format(self.meta.get_label("service_advisor")))
 
-	def validate_sales_person_mandatory(self):
+	def validate_service_advisor_mandatory(self):
 		if not self.appointment_type:
 			return
 
-		# Check if appointment source allows non-mandatory sales person
+		# Check if appointment source allows non-mandatory service advisor
 		if self.appointment_source:
-			sales_person_non_mandatory = frappe.get_cached_value("Appointment Source", self.appointment_source, "sales_person_non_mandatory")
-			if sales_person_non_mandatory:
+			service_advisor_non_mandatory = frappe.get_cached_value("Appointment Source", self.appointment_source, "service_advisor_non_mandatory")
+			if service_advisor_non_mandatory:
 				return
 
 		appointment_type_doc = frappe.get_cached_doc("Appointment Type", self.appointment_type)
-		if not self.sales_person and appointment_type_doc.sales_person_mandatory:
-			frappe.throw(_("{0} is mandatory for appointment confirmation").format(self.meta.get_label("sales_person")))
+		if not self.service_advisor and appointment_type_doc.service_advisor_mandatory:
+			frappe.throw(_("{0} is mandatory for appointment confirmation").format(self.meta.get_label("service_advisor")))
 
-	def validate_sales_person_availability(self):
+	def validate_service_advisor_availability(self):
 		appointment_type_doc = frappe.get_cached_doc("Appointment Type", self.appointment_type) \
 			if self.appointment_type else frappe._dict()
 
-		if self.sales_person:
-			# Check allowed sales persons
-			allowed_sales_persons = get_allowed_sales_persons(self.appointment_type)
-			if allowed_sales_persons and self.sales_person not in allowed_sales_persons:
+		if self.service_advisor:
+			# Check allowed service advisors
+			allowed_service_advisors = get_allowed_service_advisors(self.appointment_type)
+			if allowed_service_advisors and self.service_advisor not in allowed_service_advisors:
 				frappe.msgprint(_("{0} is not a valid {1} for appointment type {2}").format(
-					frappe.bold(self.sales_person),
-					self.meta.get_label("sales_person"),
+					frappe.bold(self.service_advisor),
+					self.meta.get_label("service_advisor"),
 					self.appointment_type,
-				), raise_exception=appointment_type_doc.validate_sales_person_availability)
+				), raise_exception=appointment_type_doc.validate_service_advisor_availability)
 
 			# Check if not already booked
 			appointments_in_slot = get_appointments_in_slot(self.scheduled_dt, self.end_dt,
-				sales_person=self.sales_person,
+				service_advisor=self.service_advisor,
 				appointment=self.name if not self.is_new() else None
 			)
 			if appointments_in_slot:
 				conflict_appointment = appointments_in_slot[0].name
 				timeslot_str = self.get_timeslot_str()
 				frappe.msgprint(_("{0} {1} is already assigned to another {2} for time slot {3}").format(
-					self.meta.get_label("sales_person"),
-					frappe.bold(self.sales_person),
+					self.meta.get_label("service_advisor"),
+					frappe.bold(self.service_advisor),
 					frappe.get_desk_link("Appointment", conflict_appointment),
 					timeslot_str,
-				), raise_exception=appointment_type_doc.validate_sales_person_availability)
+				), raise_exception=appointment_type_doc.validate_service_advisor_availability)
 
 	def validate_previous_appointment(self):
 		if self.previous_appointment:
@@ -364,10 +380,10 @@ class Appointment(StatusUpdater):
 			'event_participants': event_participants
 		})
 
-		if self.sales_person:
+		if self.service_advisor:
 			appointment_event.append('event_participants', dict(
 				reference_doctype='Sales Person',
-				reference_docname=self.sales_person
+				reference_docname=self.service_advisor
 			))
 
 		appointment_event.insert(ignore_permissions=True)
@@ -618,9 +634,9 @@ def get_appointment_timeslots(scheduled_date, appointment_type, appointment=None
 			appointment=appointment,
 		)
 
-		allowed_sales_persons = []
+		allowed_service_advisors = []
 		if include_available_agents:
-			allowed_sales_persons = get_allowed_sales_persons(appointment_type)
+			allowed_service_advisors = get_allowed_service_advisors(appointment_type)
 
 		for timeslot_start, timeslot_end in timeslots:
 			timeslot_data = make_timeslot_obj(
@@ -629,7 +645,7 @@ def get_appointment_timeslots(scheduled_date, appointment_type, appointment=None
 				booked_appointments,
 				no_of_agents,
 				include_available_agents=include_available_agents,
-				allowed_sales_persons=allowed_sales_persons,
+				allowed_service_advisors=allowed_service_advisors,
 			)
 
 			out.timeslots.append(timeslot_data)
@@ -701,13 +717,13 @@ def make_timeslot_obj(
 	booked_appointments,
 	no_of_agents,
 	include_available_agents=False,
-	allowed_sales_persons=None,
+	allowed_service_advisors=None,
 ):
 	timeslot_start = get_datetime(timeslot_start)
 	timeslot_end = get_datetime(timeslot_end)
 	booked_appointments = booked_appointments or []
 	no_of_agents = cint(no_of_agents)
-	allowed_sales_persons = allowed_sales_persons or []
+	allowed_service_advisors = allowed_service_advisors or []
 
 	appointments_in_slot = []
 	for apt in booked_appointments:
@@ -726,19 +742,19 @@ def make_timeslot_obj(
 	})
 
 	if include_available_agents:
-		booked_agents = {app.sales_person for app in appointments_in_slot if app.sales_person}
-		available_agents = [agent for agent in allowed_sales_persons if agent not in booked_agents]
+		booked_agents = {app.service_advisor for app in appointments_in_slot if app.service_advisor}
+		available_agents = [agent for agent in allowed_service_advisors if agent not in booked_agents]
 		timeslot_obj['available_agents'] = available_agents
 
 	return timeslot_obj
 
 
-def get_allowed_sales_persons(appointment_type):
+def get_allowed_service_advisors(appointment_type):
 	if not appointment_type:
 		return []
 
 	appointment_type_doc = frappe.get_cached_doc('Appointment Type', appointment_type)
-	return appointment_type_doc.get_sales_persons()
+	return appointment_type_doc.get_service_advisors()
 
 
 def count_appointments_in_slot(start_dt, end_dt, appointment_type, appointment=None):
@@ -751,7 +767,7 @@ def count_appointments_in_slot(start_dt, end_dt, appointment_type, appointment=N
 	return len(appointments) if appointments else 0
 
 
-def get_appointments_in_slot(start_dt, end_dt, appointment_type=None, appointment=None, sales_person=None):
+def get_appointments_in_slot(start_dt, end_dt, appointment_type=None, appointment=None, service_advisor=None):
 	start_dt = get_datetime(start_dt)
 	end_dt = get_datetime(end_dt)
 
@@ -759,28 +775,28 @@ def get_appointments_in_slot(start_dt, end_dt, appointment_type=None, appointmen
 	if appointment_type:
 		appointment_type_condition = "and appointment_type = %(appointment_type)s"
 
-	sales_person_condition = ""
-	if sales_person:
-		sales_person_condition = "and sales_person = %(sales_person)s"
+	service_advisor_condition = ""
+	if service_advisor:
+		service_advisor_condition = "and service_advisor = %(service_advisor)s"
 
 	exclude_condition = ""
 	if appointment:
 		exclude_condition = "and name != %(appointment)s"
 
 	appointments = frappe.db.sql(f"""
-		select name, scheduled_date, scheduled_dt, end_dt, sales_person
+		select name, scheduled_date, scheduled_dt, end_dt, service_advisor
 		from `tabAppointment`
 		where docstatus = 1 and status != 'Rescheduled'
 			and %(start_dt)s < end_dt AND %(end_dt)s > scheduled_dt
 			{appointment_type_condition}
-			{sales_person_condition}
+			{service_advisor_condition}
 			{exclude_condition}
 	""", {
 		'start_dt': start_dt,
 		'end_dt': end_dt,
 		'appointment_type': appointment_type,
 		'appointment': appointment,
-		'sales_person': sales_person,
+		'service_advisor': service_advisor,
 	}, as_dict=1)
 
 	return appointments or []
@@ -1121,7 +1137,7 @@ def get_validate_past_timeslot(appointment_type):
 
 @frappe.whitelist()
 @frappe.validate_and_sanitize_search_inputs
-def appointment_sales_person_query(doctype, txt, searchfield, start, page_len, filters):
+def appointment_service_advisor_query(doctype, txt, searchfield, start, page_len, filters):
 	from crm.queries import get_fields
 	from frappe.desk.reportview import get_match_cond, get_filters_cond
 
@@ -1134,7 +1150,7 @@ def appointment_sales_person_query(doctype, txt, searchfield, start, page_len, f
 	searchfields = " or ".join([f"`tabSales Person`.{field} like %(txt)s" for field in searchfields])
 
 	appointment_type = filters.pop("appointment_type", None)
-	allowed_sales_persons = get_allowed_sales_persons(appointment_type)
+	allowed_service_advisors = get_allowed_service_advisors(appointment_type)
 
 	appointment = filters.pop("appointment", None)
 	scheduled_dt = filters.pop("scheduled_dt", None)
@@ -1146,7 +1162,7 @@ def appointment_sales_person_query(doctype, txt, searchfield, start, page_len, f
 	if scheduled_dt and end_dt:
 		appointment_join = """
 			left join `tabAppointment`
-			on `tabAppointment`.sales_person = `tabSales Person`.name
+			on `tabAppointment`.service_advisor = `tabSales Person`.name
 			and `tabAppointment`.docstatus = 1
 			and `tabAppointment`.status != 'Rescheduled'
 			and %(start_dt)s < `tabAppointment`.end_dt
@@ -1159,18 +1175,18 @@ def appointment_sales_person_query(doctype, txt, searchfield, start, page_len, f
 		availability_field = ", COUNT(`tabAppointment`.name)"
 		availability_sort = "COUNT(`tabAppointment`.name), "
 
-	if allowed_sales_persons:
-		sales_person_conditions = "`tabSales Person`.name in %(allowed_sales_persons)s"
+	if allowed_service_advisors:
+		service_advisor_conditions = "`tabSales Person`.name in %(allowed_service_advisors)s"
 		fcond = ""
 	else:
-		sales_person_conditions = "`tabSales Person`.is_group = 0"
+		service_advisor_conditions = "`tabSales Person`.is_service_advisor = 1"
 		fcond = get_filters_cond(doctype, filters, conditions)
 
 	out = frappe.db.sql("""
 		select `tabSales Person`.name {availability_field} {fields}
 		from `tabSales Person`
 		{appointment_join}
-		where `tabSales Person`.enabled = 1 and {sales_person_conditions} and ({scond}) {fcond} {mcond}
+		where `tabSales Person`.enabled = 1 and {service_advisor_conditions} and ({scond}) {fcond} {mcond}
 		group by `tabSales Person`.name
 		order by
 			if(locate(%(_txt)s, `tabSales Person`.name), locate(%(_txt)s, `tabSales Person`.name), 99999),
@@ -1183,7 +1199,7 @@ def appointment_sales_person_query(doctype, txt, searchfield, start, page_len, f
 		'key': searchfield,
 		'fcond': fcond,
 		'mcond': get_match_cond(doctype),
-		'sales_person_conditions': sales_person_conditions,
+		'service_advisor_conditions': service_advisor_conditions,
 		'availability_field': availability_field,
 		'availability_sort': availability_sort,
 		'appointment_join': appointment_join,
@@ -1192,7 +1208,7 @@ def appointment_sales_person_query(doctype, txt, searchfield, start, page_len, f
 		'_txt': txt.replace("%", ""),
 		'start': start,
 		'page_len': page_len,
-		'allowed_sales_persons': allowed_sales_persons,
+		'allowed_service_advisors': allowed_service_advisors,
 		'appointment': appointment,
 		'start_dt': scheduled_dt,
 		'end_dt': end_dt,

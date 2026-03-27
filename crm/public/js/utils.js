@@ -12,6 +12,28 @@ $.extend(crm.utils, {
 		});
 	},
 
+	get_service_advisor_from_user: function (callback) {
+		return frappe.call({
+			method: "crm.crm.doctype.sales_person.sales_person.get_service_advisor_from_user",
+			callback: function (r) {
+				if (!r.exc && callback) {
+					callback(r.message);
+				}
+			}
+		});
+	},
+
+	get_advisor_sales_person_from_user: function (callback) {
+		return frappe.call({
+			method: "crm.crm.doctype.sales_person.sales_person.get_advisor_sales_person_from_user",
+			callback: function (r) {
+				if (r.message && callback) {
+					callback(r.message);
+				}
+			}
+		});
+	},
+
 	get_contact_details: function(frm, party_type_field) {
 		if (frm.updating_party_details) {
 			return;

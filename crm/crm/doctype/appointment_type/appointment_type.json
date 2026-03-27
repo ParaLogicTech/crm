@@ -14,12 +14,12 @@
   "column_break_4",
   "validate_availability",
   "validate_past_timeslot",
-  "validate_sales_person_availability",
-  "sales_person_mandatory",
-  "sales_person_validate_self",
+  "validate_service_advisor_availability",
+  "service_advisor_mandatory",
+  "service_advisor_validate_self",
   "availability_section",
   "number_of_agents",
-  "sales_persons",
+  "service_advisors",
   "column_break_8",
   "appointment_duration",
   "advance_booking_days",
@@ -109,24 +109,6 @@
    "fieldtype": "Column Break"
   },
   {
-   "fieldname": "sales_persons",
-   "fieldtype": "Table MultiSelect",
-   "label": "Sales Persons",
-   "options": "Appointment Sales Person"
-  },
-  {
-   "default": "0",
-   "fieldname": "validate_sales_person_availability",
-   "fieldtype": "Check",
-   "label": "Validate Sales Person Availability"
-  },
-  {
-   "default": "0",
-   "fieldname": "sales_person_mandatory",
-   "fieldtype": "Check",
-   "label": "Sales Person Mandatory before Confirmation"
-  },
-  {
    "fieldname": "section_break_7qgv",
    "fieldtype": "Section Break",
    "label": "Configuration"
@@ -139,14 +121,32 @@
   },
   {
    "default": "0",
-   "fieldname": "sales_person_validate_self",
+   "fieldname": "validate_service_advisor_availability",
    "fieldtype": "Check",
-   "label": "Do not allow Sales Person to select another Sales Person"
+   "label": "Validate Service Advisor Availability"
+  },
+  {
+   "default": "0",
+   "fieldname": "service_advisor_mandatory",
+   "fieldtype": "Check",
+   "label": "Service Advisor Mandatory before Confirmation"
+  },
+  {
+   "default": "0",
+   "fieldname": "service_advisor_validate_self",
+   "fieldtype": "Check",
+   "label": "Do not allow Service Advisor to select another Service Advisor"
+  },
+  {
+   "fieldname": "service_advisors",
+   "fieldtype": "Table MultiSelect",
+   "label": "Service Advisors",
+   "options": "Appointment Service Advisor"
   }
  ],
  "grid_page_length": 500,
  "links": [],
- "modified": "2026-03-16 14:50:08.448029",
+ "modified": "2026-03-25 15:09:18.550320",
  "modified_by": "Administrator",
  "module": "CRM",
  "name": "Appointment Type",
