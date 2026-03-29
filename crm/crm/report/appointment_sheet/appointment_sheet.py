@@ -131,6 +131,11 @@ class AppointmentSheetReport(object):
 			conditions.append("""a.service_advisor in (select name from `tabSales Person`
 				where lft >= {0} and rgt <= {1})""".format(lft, rgt))
 
+		if self.filters.get("sales_person"):
+			lft, rgt = frappe.db.get_value("Sales Person", self.filters.sales_person, ["lft", "rgt"])
+			conditions.append("""a.sales_person in (select name from `tabSales Person`
+				where lft >= {0} and rgt <= {1})""".format(lft, rgt))
+
 		return conditions
 
 	def get_columns(self):

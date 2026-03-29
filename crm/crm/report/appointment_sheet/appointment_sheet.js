@@ -42,10 +42,19 @@ frappe.query_reports["Appointment Sheet"] = {
 			options: "Appointment Type",
 		},
 		{
+			fieldname: "sales_person",
+			label: __("Sales Person"),
+			fieldtype: "Link",
+			options: "Sales Person",
+		},
+		{
 			fieldname: "service_advisor",
 			label: __("Service Advisor"),
 			fieldtype: "Link",
 			options: "Sales Person",
+			get_query: () => {
+				return { filters: { "is_group": 0 } };
+			}
 		},
 	],
 
