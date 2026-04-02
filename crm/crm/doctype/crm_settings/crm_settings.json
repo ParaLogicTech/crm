@@ -5,22 +5,17 @@
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
-  "campaign_naming_by",
-  "opportunity_contact_no_mandatory",
-  "column_break_5",
   "mark_opportunity_lost_after_days",
   "opportunity_auto_lost_reason",
   "auto_mark_opportunity_as_lost",
+  "column_break_5",
+  "opportunity_contact_no_mandatory",
   "column_break_6",
+  "role_allowed_to_link_appointment_opportunity",
+  "notification_settings_section",
   "customer_birthday_notification_time"
  ],
  "fields": [
-  {
-   "fieldname": "campaign_naming_by",
-   "fieldtype": "Select",
-   "label": "Campaign Naming By",
-   "options": "Customer Name\nNaming Series"
-  },
   {
    "fieldname": "column_break_5",
    "fieldtype": "Column Break"
@@ -59,12 +54,23 @@
    "fieldname": "customer_birthday_notification_time",
    "fieldtype": "Time",
    "label": "Customer Birthday Notification Time of Day"
+  },
+  {
+   "fieldname": "notification_settings_section",
+   "fieldtype": "Section Break",
+   "label": "Notification Settings"
+  },
+  {
+   "fieldname": "role_allowed_to_link_appointment_opportunity",
+   "fieldtype": "Link",
+   "label": "Restrict Role Allowed to Link Appointment with Opportunity",
+   "options": "Role"
   }
  ],
  "grid_page_length": 500,
  "issingle": 1,
  "links": [],
- "modified": "2025-11-21 10:30:50.174861",
+ "modified": "2026-04-02 12:11:32.779075",
  "modified_by": "Administrator",
  "module": "CRM",
  "name": "CRM Settings",

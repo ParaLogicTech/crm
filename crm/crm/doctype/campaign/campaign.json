@@ -2,7 +2,7 @@
  "actions": [],
  "allow_import": 1,
  "allow_rename": 1,
- "autoname": "naming_series:",
+ "autoname": "field:campaign_name",
  "creation": "2013-01-10 16:34:18",
  "description": "Keep Track of Sales Campaigns. Keep track of Leads, Quotations, Sales Order etc from Campaigns to gauge Return on Investment. ",
  "doctype": "DocType",
@@ -11,7 +11,6 @@
  "field_order": [
   "campaign",
   "campaign_name",
-  "naming_series",
   "column_break_4",
   "description",
   "campaign_schedules_section",
@@ -32,16 +31,8 @@
    "label": "Campaign Name",
    "oldfieldname": "campaign_name",
    "oldfieldtype": "Data",
-   "reqd": 1
-  },
-  {
-   "default": "CAM-",
-   "fieldname": "naming_series",
-   "fieldtype": "Select",
-   "hidden": 1,
-   "label": "Naming Series",
-   "options": "CAM-",
-   "set_only_once": 1
+   "reqd": 1,
+   "unique": 1
   },
   {
    "fieldname": "description",
@@ -78,14 +69,15 @@
    "label": "Claim Billing"
   }
  ],
+ "grid_page_length": 500,
  "icon": "fa fa-bullhorn",
  "idx": 1,
  "links": [],
- "modified": "2024-11-29 22:47:49.270448",
+ "modified": "2026-04-02 01:12:28.801685",
  "modified_by": "Administrator",
  "module": "CRM",
  "name": "Campaign",
- "naming_rule": "By \"Naming Series\" field",
+ "naming_rule": "By fieldname",
  "owner": "Administrator",
  "permissions": [
   {
@@ -153,6 +145,7 @@
    "role": "CR User"
   }
  ],
+ "row_format": "Dynamic",
  "sort_field": "modified",
  "sort_order": "DESC",
  "states": [],

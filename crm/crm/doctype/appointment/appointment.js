@@ -94,31 +94,48 @@ crm.Appointment = class Appointment extends crm.QuickContacts {
 			});
 		}
 
-		if (this.frm.doc.docstatus == 1 && this.frm.doc.status != "Rescheduled") {
-			if (this.frm.doc.status != "Checked In") {
-				this.frm.add_custom_button(__('Check In'), () => this.update_status("Checked In"),
-					__("Set Status"));
+		if (this.frm.doc.docstatus == 1) {
+			if (this.frm.doc.status != "Rescheduled" && this.frm.has_perm("write")) {
+				if (!this.frm.doc.check_in_dt) {
+					this.frm.add_custom_button(__('Check In'), () => this.update_status("Checked In"),
+						__("Set Status"));
+				}
+
+				if (
+					["Open", "Checked In", "Missed"].includes(this.frm.doc.status)
+					&& frappe.model.can_create("Appointment")
+				) {
+					this.frm.add_custom_button(__('Reschedule'), () => this.reschedule_appointment(),
+						__("Set Status"));
+				}
+
+				if (!["Missed", "Converted"].includes(this.frm.doc.status)) {
+					this.frm.add_custom_button(__('Missed'), () => this.update_status("Missed"),
+						__("Set Status"));
+				}
+
+				if (!["Closed", "Converted"].includes(this.frm.doc.status)) {
+					this.frm.add_custom_button(__('Closed'), () => this.update_status("Closed"),
+						__("Set Status"));
+				}
 			}
 
-			if (["Open", "Checked In", "Missed"].includes(this.frm.doc.status)) {
-				this.frm.add_custom_button(__('Reschedule'), () => this.reschedule_appointment(),
-					__("Set Status"));
-			}
-
-			if (this.frm.doc.status != "Missed") {
-				this.frm.add_custom_button(__('Missed'), () => this.update_status("Missed"),
-					__("Set Status"));
-			}
-
-			if (!["Closed", "Converted"].includes(this.frm.doc.status)) {
-				this.frm.add_custom_button(__('Closed'), () => this.update_status("Closed"),
+			if (
+				!this.frm.doc.opportunity
+				&& this.frm.has_perm("write")
+				&& this.frm.doc.__onload?.can_link_opportunity
+			) {
+				this.frm.add_custom_button(__('Link Opportunity'), () => this.link_with_opportunity(),
 					__("Set Status"));
 			}
 
 			if (
-				(this.frm.doc.status == "Closed" && this.frm.doc.is_closed)
-				|| (this.frm.doc.status == "Missed" && this.frm.doc.is_missed)
-				|| (this.frm.doc.status == "Checked In" && this.frm.doc.is_checked_in)
+				this.frm.has_perm("write")
+				&& (
+					(this.frm.doc.status == "Closed" && this.frm.doc.is_closed)
+					|| (this.frm.doc.status == "Missed" && this.frm.doc.is_missed)
+					|| (this.frm.doc.status == "Checked In" && this.frm.doc.is_checked_in)
+				)
 			) {
 				this.frm.add_custom_button(__('Re-Open'), () => this.update_status("Open"),
 					__("Set Status"));
@@ -366,19 +383,80 @@ crm.Appointment = class Appointment extends crm.QuickContacts {
 	}
 
 	update_status(status) {
-		let me = this;
-		me.frm.check_if_unsaved();
+		this.frm.check_if_unsaved();
 
-		frappe.call({
+		return frappe.call({
 			method: "crm.crm.doctype.appointment.appointment.update_status",
 			args: {
-				appointment: me.frm.doc.name,
+				appointment: this.frm.doc.name,
 				status: status
 			},
-			callback: function(r) {
-				me.frm.reload_doc();
+			callback: () => {
+				this.frm.reload_doc();
 			},
 		});
+	}
+
+	link_with_opportunity() {
+		this.frm.check_if_unsaved();
+
+		let dialog = new frappe.ui.Dialog({
+			title: __("Link Appointment with Opportunity"),
+			no_submit_on_enter: true,
+			fields: [
+				{
+					fieldtype: "Link",
+					label: __("Opportunity"),
+					fieldname: "opportunity",
+					reqd: 1,
+					options: "Opportunity",
+					onchange: () => {
+						let opportunity = dialog.get_value("opportunity");
+						if (opportunity) {
+							frappe.db.get_value("Opportunity", opportunity, ["customer_name", "sales_person"], (r) => {
+								if (r) {
+									dialog.set_value("customer_name", r.customer_name);
+									dialog.set_value("sales_person", r.sales_person);
+								}
+							});
+						} else {
+							dialog.set_value("customer_name", null);
+							dialog.set_value("sales_person", null);
+						}
+					}
+				},
+				{
+					fieldtype: "Data",
+					label: __("Customer Name"),
+					fieldname: "customer_name",
+					read_only: 1
+				},
+				{
+					fieldtype: "Data",
+					label: __("Sales Person"),
+					fieldname: "sales_person",
+					read_only: 1,
+				},
+			]
+		});
+
+		dialog.set_primary_action(__("Link"), () => {
+			let values = dialog.get_values();
+			return frappe.call({
+				method: "crm.crm.doctype.appointment.appointment.link_with_opportunity",
+				args: {
+					appointment: this.frm.doc.name,
+					opportunity: values.opportunity,
+				},
+				callback: (r) => {
+					if (!r.exc) {
+						dialog.hide();
+						this.frm.reload_doc();
+					}
+				}
+			});
+		});
+		dialog.show();
 	}
 
 	can_notify(what) {

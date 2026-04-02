@@ -45,6 +45,7 @@ class Appointment(StatusUpdater):
 		self.set_onload('contact_nos', get_all_contact_nos(self.appointment_for, self.party_name))
 		self.set_onload('notification_count', get_all_notification_count(self.doctype, self.name))
 		self.set_onload('validate_past_timeslot', get_validate_past_timeslot(self.appointment_type))
+		self.set_onload('can_link_opportunity', can_link_opportunity())
 
 		self.set_can_notify_onload()
 		self.set_scheduled_reminder_onload()
@@ -115,6 +116,7 @@ class Appointment(StatusUpdater):
 		self.set_scheduled_date_time()
 		self.set_customer_details()
 		self.set_advisor_sales_person_from_user()
+		self.set_sales_person_details()
 
 	def set_missing_values_after_submit(self):
 		self.set_customer_details()
@@ -183,6 +185,9 @@ class Appointment(StatusUpdater):
 
 		if not self.get("sales_person") and details.sales_person:
 			self.sales_person = details.sales_person
+
+	def set_sales_person_details(self):
+		self.update(get_fetch_values(self.doctype, "sales_person", self.sales_person))
 
 	def clean_remarks(self):
 		fields = ['remarks']
@@ -427,7 +432,7 @@ class Appointment(StatusUpdater):
 				self.is_missed = 0
 
 			# Submitted or cancelled rescheduled appointment
-			is_rescheduled = frappe.get_all("Appointment", filters={'previous_appointment': self.name, 'docstatus': ['>', 0]})
+			is_rescheduled = self.get_rescheduled_appointment(include_cancelled=True)
 
 			if is_rescheduled:
 				self.status = "Rescheduled"
@@ -470,6 +475,12 @@ class Appointment(StatusUpdater):
 					'check_in_dt': self.check_in_dt,
 					'check_in_user': self.check_in_user,
 				}, update_modified=update_modified)
+
+	def get_rescheduled_appointment(self, include_cancelled=False):
+		return frappe.db.get_value("Appointment", filters={
+			"previous_appointment": self.name,
+			"docstatus": ['>', 0] if include_cancelled else 1
+		})
 
 	def is_appointment_closed(self):
 		return cint(self.is_closed)
@@ -602,6 +613,30 @@ class Appointment(StatusUpdater):
 
 		self.db_set("customer_acknowledged", 1, notify=True)
 		self.add_comment("Label", _("Received Customer Acknowledgement"))
+
+	def link_with_opportunity(self, opportunity):
+		opportunity_doc = frappe.get_doc("Opportunity", opportunity)
+
+		if getdate(opportunity_doc.transaction_date) > getdate(self.scheduled_date):
+			frappe.throw(_("Opportunity Date {0} cannot be after Appointment Date {1}").format(
+				frappe.format(opportunity_doc.transaction_date),
+				frappe.format(self.scheduled_date),
+			))
+
+		self.load_doc_before_save()
+
+		self.opportunity = opportunity
+
+		if opportunity_doc.sales_person:
+			self.sales_person = opportunity_doc.sales_person
+			self.set_sales_person_details()
+
+		self.set_user_and_timestamp()
+		self.db_update()
+		self.save_version()
+		self.notify_update()
+
+		self.update_opportunity_status()
 
 
 @frappe.whitelist()
@@ -1133,6 +1168,37 @@ def get_validate_past_timeslot(appointment_type):
 		return False
 
 	return frappe.get_cached_value("Appointment Type", appointment_type, "validate_past_timeslot")
+
+
+@frappe.whitelist()
+def link_with_opportunity(appointment, opportunity):
+	if not appointment:
+		frappe.throw(_("Appointment not provided"))
+	if not opportunity:
+		frappe.throw(_("Opportunity not provided"))
+
+	appointment_doc = frappe.get_doc("Appointment", appointment, for_update=True)
+
+	if appointment_doc.opportunity:
+		frappe.throw(_("Appointment is already linked with an Opportunity"))
+
+	appointment_doc.check_permission("write")
+	if not can_link_opportunity():
+		frappe.throw(_("You are not allowed to link an Appointment with an Opportunity"))
+
+	appointment_doc.link_with_opportunity(opportunity)
+
+	# link rescheduled appointment as well
+	rescheduled_appointment = appointment_doc.get_rescheduled_appointment()
+	if rescheduled_appointment:
+		rescheduled_appointment_doc = frappe.get_doc("Appointment", rescheduled_appointment, for_update=True)
+		if not rescheduled_appointment_doc.opportunity:
+			rescheduled_appointment_doc.link_with_opportunity(opportunity)
+
+
+def can_link_opportunity():
+	allowed_role = frappe.db.get_single_value("CRM Settings", "role_allowed_to_link_appointment_opportunity")
+	return bool(not allowed_role or allowed_role in frappe.get_roles())
 
 
 @frappe.whitelist()
