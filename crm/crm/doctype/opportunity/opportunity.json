@@ -44,10 +44,10 @@
   "more_info",
   "source",
   "information_source",
-  "column_break_20",
+  "cb_more_info_1",
   "campaign",
   "territory",
-  "column_break_22",
+  "cb_more_info_2",
   "lead_classification",
   "sales_stage",
   "opportunity_details_section",
@@ -215,7 +215,7 @@
   {
    "fieldname": "items",
    "fieldtype": "Table",
-   "label": "Interested In",
+   "label": "Items",
    "oldfieldname": "enquiry_details",
    "oldfieldtype": "Table",
    "options": "Opportunity Item"
@@ -339,15 +339,7 @@
    "label": "Lost Reason"
   },
   {
-   "fieldname": "column_break_20",
-   "fieldtype": "Column Break"
-  },
-  {
    "fieldname": "column_break_15",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "column_break_22",
    "fieldtype": "Column Break"
   },
   {
@@ -496,6 +488,14 @@
    "fieldname": "details",
    "fieldtype": "Small Text",
    "label": "Details"
+  },
+  {
+   "fieldname": "cb_more_info_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "cb_more_info_2",
+   "fieldtype": "Column Break"
   }
  ],
  "grid_page_length": 500,
@@ -503,7 +503,7 @@
  "idx": 195,
  "is_calendar_and_gantt": 1,
  "links": [],
- "modified": "2026-02-01 04:40:55.387710",
+ "modified": "2026-05-13 23:12:33.163647",
  "modified_by": "Administrator",
  "module": "CRM",
  "name": "Opportunity",

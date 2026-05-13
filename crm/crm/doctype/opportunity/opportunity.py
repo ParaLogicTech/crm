@@ -300,7 +300,7 @@ def make_appointment(source_name, target_doc=None):
 
 		target.run_method("set_missing_values")
 
-	target_doc = get_mapped_doc("Opportunity", source_name, {
+	mapper = {
 		"Opportunity": {
 			"doctype": "Appointment",
 			"field_map": {
@@ -313,7 +313,11 @@ def make_appointment(source_name, target_doc=None):
 				"sales_person": "sales_person",
 			}
 		}
-	}, target_doc, set_missing_values)
+	}
+
+	frappe.utils.call_hook_method("update_appointment_from_opportunity_mapper", mapper, "Appointment")
+
+	target_doc = get_mapped_doc("Opportunity", source_name, mapper, target_doc, set_missing_values)
 
 	return target_doc
 
