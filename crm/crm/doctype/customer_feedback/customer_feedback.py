@@ -28,6 +28,7 @@ class CustomerFeedback(Document):
 		self.set_missing_values()
 		self.validate_feedback_type()
 		self.set_title()
+		self.set_branch()
 		self.set_status()
 		self.get_previous_values()
 
@@ -86,6 +87,21 @@ class CustomerFeedback(Document):
 			self.status = "Completed"
 		else:
 			self.status = "Pending"
+	
+	def set_branch(self):
+		if self.meta.has_field("branch") and not self.branch:
+			if self.project:
+				self.branch = frappe.get_cached_value("Project", self.project, "branch")
+			elif (
+				self.reference_doctype
+				and self.reference_name
+				and frappe.get_meta(self.reference_doctype).has_field("branch")
+			):
+				self.branch = frappe.get_cached_value(
+					self.reference_doctype,
+					self.reference_name,
+					"branch",
+				)
 
 	def get_previous_values(self):
 		self.previous_values = {}
