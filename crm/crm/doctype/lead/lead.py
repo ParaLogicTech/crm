@@ -3,7 +3,7 @@
 
 import frappe
 from frappe import _
-from frappe.utils import validate_email_address, cint, cstr, comma_and, has_gravatar, clean_whitespace
+from frappe.utils import validate_email_address, cint, cstr, comma_and, clean_whitespace
 from frappe.model.mapper import get_mapped_doc
 from frappe.utils.status_updater import StatusUpdater
 from frappe.contacts.address_and_contact import load_address_and_contact
@@ -34,7 +34,6 @@ class Lead(StatusUpdater):
 		self.validate_mobile_no()
 		self.validate_tax_id()
 		# self.check_email_id_is_unique()
-		self.set_gravatar()
 		self.set_status()
 
 	def validate_lead_name(self):
@@ -85,11 +84,6 @@ class Lead(StatusUpdater):
 			if duplicate_leads:
 				frappe.throw(_("Email Address must be unique, Lead already exists for {0}")
 					.format(comma_and(duplicate_leads)), frappe.DuplicateEntryError)
-
-	def set_gravatar(self):
-		if self.email_id:
-			if self.is_new() or not self.image:
-				self.image = has_gravatar(self.email_id)
 
 	def is_opportunity(self):
 		return self.has_opportunity()
