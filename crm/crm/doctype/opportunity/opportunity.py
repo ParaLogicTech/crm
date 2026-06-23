@@ -357,11 +357,7 @@ def auto_mark_opportunity_as_lost():
 			frappe.db.commit()
 		except Exception:
 			frappe.db.rollback()
-			traceback = frappe.get_traceback()
-			doc.log_error(
-				title=_("Error: auto_mark_opportunity_as_lost for Opportunity: {}").format(doc.name),
-				message=traceback,
-			)
+			doc.log_error(title=_("auto_mark_opportunity_as_lost failure"))
 			frappe.db.commit()
 
 
