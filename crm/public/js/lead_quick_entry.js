@@ -4,8 +4,11 @@ frappe.ui.form.LeadQuickEntryForm = class LeadQuickEntryForm extends frappe.ui.f
 	skip_redirect_on_error = true
 
 	render_dialog() {
-		this.mandatory = this.mandatory.concat(this.get_lead_fields());
+		let additional_fields = this.get_lead_fields();
+		let additional_fieldnames = additional_fields.map(f => f.fieldname);
+		this.mandatory = this.mandatory.filter(f => !additional_fieldnames.includes(f.fieldname));
 		this.mandatory = this.mandatory.filter(d => d.fieldname != 'status');
+		this.mandatory = this.mandatory.concat(additional_fields);
 		super.render_dialog();
 		this.setup_events();
 		this.set_sales_person_from_user();
