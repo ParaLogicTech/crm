@@ -26,6 +26,7 @@
   "mins_to_first_response",
   "lost_reason_section",
   "lost_reasons",
+  "lost_date",
   "column_break_9",
   "order_lost_reason",
   "contact_info",
@@ -52,8 +53,6 @@
   "sales_stage",
   "opportunity_details_section",
   "details",
-  "sec_applies_to",
-  "column_break_11",
   "items_section",
   "items",
   "section_break_14",
@@ -396,12 +395,6 @@
    "fieldtype": "Column Break"
   },
   {
-   "collapsible": 1,
-   "fieldname": "ratings_section",
-   "fieldtype": "Section Break",
-   "label": "Ratings"
-  },
-  {
    "fieldname": "information_source",
    "fieldtype": "Link",
    "label": "Information Source",
@@ -414,12 +407,6 @@
    "read_only": 1
   },
   {
-   "fieldname": "column_break_11",
-   "fieldtype": "Column Break",
-   "oldfieldtype": "Column Break",
-   "width": "50%"
-  },
-  {
    "fieldname": "column_break_13",
    "fieldtype": "Column Break"
   },
@@ -430,13 +417,6 @@
    "hidden": 1,
    "label": "Conversion Document",
    "read_only": 1
-  },
-  {
-   "collapsible": 1,
-   "fieldname": "sec_applies_to",
-   "fieldtype": "Section Break",
-   "hidden": 1,
-   "label": "Applies To"
   },
   {
    "fieldname": "due_date",
@@ -503,6 +483,13 @@
    "fieldtype": "Check",
    "label": "Disable Recall Opportunity",
    "no_copy": 1
+  },
+  {
+   "fieldname": "lost_date",
+   "fieldtype": "Date",
+   "label": "Lost Date",
+   "no_copy": 1,
+   "read_only": 1
   }
  ],
  "grid_page_length": 500,
@@ -510,7 +497,7 @@
  "idx": 195,
  "is_calendar_and_gantt": 1,
  "links": [],
- "modified": "2026-07-13 18:20:33.885161",
+ "modified": "2026-07-13 18:38:13.202767",
  "modified_by": "Administrator",
  "module": "CRM",
  "name": "Opportunity",
