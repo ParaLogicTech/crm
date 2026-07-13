@@ -478,18 +478,18 @@
    "fieldtype": "Column Break"
   },
   {
-   "default": "0",
-   "fieldname": "disable_recall_opportunity",
-   "fieldtype": "Check",
-   "label": "Disable Recall Opportunity",
-   "no_copy": 1
-  },
-  {
    "fieldname": "lost_date",
    "fieldtype": "Date",
    "label": "Lost Date",
    "no_copy": 1,
    "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "disable_recall_opportunity",
+   "fieldtype": "Check",
+   "label": "Disable Recall Opportunity",
+   "no_copy": 1
   }
  ],
  "grid_page_length": 500,
@@ -497,7 +497,7 @@
  "idx": 195,
  "is_calendar_and_gantt": 1,
  "links": [],
- "modified": "2026-07-13 18:38:13.202767",
+ "modified": "2026-07-13 21:16:41.787748",
  "modified_by": "Administrator",
  "module": "CRM",
  "name": "Opportunity",
@@ -552,7 +552,6 @@
   }
  ],
  "row_format": "Dynamic",
- "rows_threshold_for_grid_search": 20,
  "search_fields": "status,transaction_date,party_name,customer_name,opportunity_type",
  "sender_field": "contact_email",
  "sort_field": "transaction_date",
