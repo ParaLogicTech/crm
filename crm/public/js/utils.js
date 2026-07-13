@@ -87,6 +87,12 @@ $.extend(crm.utils, {
 			title: __("Mark As Lost"),
 			fields: [
 				{
+					"fieldtype": "Date",
+					"label": __("Lost Date"),
+					"fieldname": "lost_date",
+					"reqd": 1
+				},
+				{
 					"fieldtype": "Table MultiSelect",
 					"label": __("Lost Reasons"),
 					"fieldname": "lost_reason",
@@ -103,8 +109,9 @@ $.extend(crm.utils, {
 				let values = dialog.get_values();
 				let reasons = values["lost_reason"];
 				let detailed_reason = values["detailed_reason"];
+				let lost_date = values["lost_date"]
 
-				crm.utils.update_lost_status(frm, true, reasons, detailed_reason);
+				crm.utils.update_lost_status(frm, true, reasons, detailed_reason, lost_date);
 				dialog.hide();
 			},
 			primary_action_label: __('Declare Lost')
@@ -113,14 +120,15 @@ $.extend(crm.utils, {
 		dialog.show();
 	},
 
-	update_lost_status: function(frm, is_lost, lost_reasons_list=null, detailed_reason=null) {
+	update_lost_status: function(frm, is_lost, lost_reasons_list=null, detailed_reason=null, lost_date=null) {
 		return frappe.call({
 			doc: frm.doc,
 			method: "set_is_lost",
 			args: {
 				'is_lost': cint(is_lost),
 				'lost_reasons_list': lost_reasons_list,
-				'detailed_reason': detailed_reason
+				'detailed_reason': detailed_reason,
+				'lost_date':lost_date
 			},
 			callback: (r) => {
 				if (!r.exc) {
