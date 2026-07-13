@@ -53,6 +53,8 @@
   "sales_stage",
   "opportunity_details_section",
   "details",
+  "sec_applies_to",
+  "column_break_11",
   "items_section",
   "items",
   "section_break_14",
@@ -64,6 +66,7 @@
   "feedback_section",
   "remarks",
   "feedback_cb_1",
+  "ratings_section",
   "next_contact",
   "contact_schedule",
   "status",
@@ -395,6 +398,12 @@
    "fieldtype": "Column Break"
   },
   {
+   "collapsible": 1,
+   "fieldname": "ratings_section",
+   "fieldtype": "Section Break",
+   "label": "Ratings"
+  },
+  {
    "fieldname": "information_source",
    "fieldtype": "Link",
    "label": "Information Source",
@@ -407,6 +416,12 @@
    "read_only": 1
   },
   {
+   "fieldname": "column_break_11",
+   "fieldtype": "Column Break",
+   "oldfieldtype": "Column Break",
+   "width": "50%"
+  },
+  {
    "fieldname": "column_break_13",
    "fieldtype": "Column Break"
   },
@@ -417,6 +432,13 @@
    "hidden": 1,
    "label": "Conversion Document",
    "read_only": 1
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "sec_applies_to",
+   "fieldtype": "Section Break",
+   "hidden": 1,
+   "label": "Applies To"
   },
   {
    "fieldname": "due_date",
