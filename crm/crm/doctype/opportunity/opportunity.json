@@ -65,10 +65,10 @@
   "feedback_section",
   "remarks",
   "feedback_cb_1",
-  "ratings_section",
   "next_contact",
   "contact_schedule",
-  "status"
+  "status",
+  "disable_recall_opportunity"
  ],
  "fields": [
   {
@@ -496,6 +496,13 @@
   {
    "fieldname": "cb_more_info_2",
    "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "disable_recall_opportunity",
+   "fieldtype": "Check",
+   "label": "Disable Recall Opportunity",
+   "no_copy": 1
   }
  ],
  "grid_page_length": 500,
@@ -503,7 +510,7 @@
  "idx": 195,
  "is_calendar_and_gantt": 1,
  "links": [],
- "modified": "2026-05-13 23:12:33.163647",
+ "modified": "2026-07-13 18:20:33.885161",
  "modified_by": "Administrator",
  "module": "CRM",
  "name": "Opportunity",
@@ -558,6 +565,7 @@
   }
  ],
  "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
  "search_fields": "status,transaction_date,party_name,customer_name,opportunity_type",
  "sender_field": "contact_email",
  "sort_field": "transaction_date",

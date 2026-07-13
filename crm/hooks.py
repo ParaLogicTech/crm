@@ -61,6 +61,7 @@ scheduler_events = {
 		"crm.crm.doctype.contract.contract.update_status_for_contracts",
 		"crm.crm.doctype.email_campaign.email_campaign.send_email_to_leads_or_contacts",
 		"crm.crm.doctype.email_campaign.email_campaign.set_email_campaign_status",
+        "crm.crm.doctype.opportunity.opportunity.send_notification_recall_lost_opportunity"
 	]
 }
 

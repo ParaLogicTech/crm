@@ -8,3 +8,4 @@ crm.patches.refactor_lead_status
 crm.patches.refactor_customer_feedback_party
 crm.patches.copy_appointment_disable_automated_notifications
 crm.patches.update_feedback_contact_and_sales_person
+crm.patches.update_opportunity_lost_date

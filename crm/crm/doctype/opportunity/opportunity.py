@@ -4,6 +4,7 @@
 import frappe
 from frappe import _
 from frappe.utils import today, getdate, cint, clean_whitespace, comma_or, cstr, validate_email_address
+from dateutil.relativedelta import relativedelta
 from frappe.model.mapper import get_mapped_doc
 from frappe.email.inbox import link_communication_to_document
 from frappe.utils.status_updater import StatusUpdater
@@ -171,7 +172,7 @@ class Opportunity(StatusUpdater):
 			return follow_up[0]
 
 	@frappe.whitelist()
-	def set_is_lost(self, is_lost, lost_reasons_list=None, detailed_reason=None):
+	def set_is_lost(self, is_lost, lost_reasons_list=None, detailed_reason=None, lost_date=None):
 		is_lost = cint(is_lost)
 
 		if is_lost and self.is_converted():
@@ -182,12 +183,14 @@ class Opportunity(StatusUpdater):
 		if is_lost:
 			self.set_status(update=True, status="Lost")
 			self.db_set("order_lost_reason", detailed_reason)
+			self.db_set("lost_date", lost_date)
 			self.lost_reasons = []
 			for reason in lost_reasons_list:
 				self.append('lost_reasons', reason)
 		else:
 			self.set_status(update=True, status="Open")
 			self.db_set('order_lost_reason', None)
+			self.db_set("lost_date", None)
 			self.lost_reasons = []
 
 		self.update_lead_status()
@@ -232,6 +235,9 @@ class Opportunity(StatusUpdater):
 			'reference_name': self.name,
 			'communication_type': ['!=', 'Automated Message']
 		})
+	
+	def send_notification_recall_lost_opportunity(self):
+		self.run_method("notify_recall_lost_opportunity")
 
 
 @frappe.whitelist()
@@ -360,6 +366,35 @@ def auto_mark_opportunity_as_lost():
 			doc.log_error(title=_("auto_mark_opportunity_as_lost failure"))
 			frappe.db.commit()
 
+def send_notification_recall_lost_opportunity():
+	recall_interwell = frappe.db.get_single_value("CRM Settings", "recall_opportunity_after_the_months")
+	if not recall_interwell:
+		return
+	
+	lost_opportunities = frappe.get_all(
+		"Opportunity",
+		filters={
+			"status": "Lost",
+			"lost_date": ["is", "set"],
+			"disable_recall_opportunity":0
+		},
+		fields=["name", "lost_date", "opportunity_owner", "party_name", "customer_name"],
+	)
+
+	if not lost_opportunities:
+		return
+
+	current_date = getdate(today())
+
+	for opp in lost_opportunities:
+		lost_date = getdate(opp.lost_date)
+		delta = relativedelta(current_date, lost_date)
+		months_diff = delta.years * 12 + delta.months
+
+		# Trigger only on exact month boundaries that are a multiple of the interval
+		if delta.days == 0 and months_diff > 0 and months_diff % recall_interwell == 0:
+			opportunity_doc = frappe.get_doc("Opportunity", opp.get("name"))
+			opportunity_doc.send_notification_recall_lost_opportunity()
 
 @frappe.whitelist()
 def schedule_follow_up(name, schedule_date, to_discuss=None):
