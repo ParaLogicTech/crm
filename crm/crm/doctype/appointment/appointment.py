@@ -1020,12 +1020,20 @@ def send_appointment_missed_notifications():
 
 
 def automated_reminder_enabled():
-	return has_notification("Appointment", "Appointment Reminder")
+	return has_notification(
+		"Appointment",
+		notification_type="Appointment Reminder",
+		trigger_method="notify_appointment_reminder",
+	)
 
 
 def automated_missed_notification_enabled():
 	return (
-		has_notification("Appointment", "Appointment Missed")
+		has_notification(
+			"Appointment",
+			notification_type="Appointment Missed",
+			trigger_method="notify_appointment_missed",
+		)
 		and cint(frappe.get_cached_value("Appointment Booking Settings", None, "auto_mark_missed_days")) > 0
 	)
 
