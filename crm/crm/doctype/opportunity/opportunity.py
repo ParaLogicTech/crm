@@ -378,7 +378,7 @@ def send_notification_recall_lost_opportunity():
 			"lost_date": ["is", "set"],
 			"disable_recall_opportunity":0
 		},
-		fields=["name", "lost_date", "opportunity_owner", "party_name", "customer_name"],
+		fields=["name", "lost_date"],
 	)
 
 	if not lost_opportunities:
