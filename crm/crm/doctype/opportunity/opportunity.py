@@ -238,8 +238,8 @@ class Opportunity(StatusUpdater):
 			'reference_name': self.name,
 			'communication_type': ['!=', 'Automated Message']
 		})
-	
-	def send_notification_recall_lost_opportunity(self):
+
+	def trigger_recall_lost_opportunity(self):
 		self.run_method("notify_recall_lost_opportunity")
 
 
@@ -369,30 +369,42 @@ def auto_mark_opportunity_as_lost():
 			doc.log_error(title=_("auto_mark_opportunity_as_lost failure"))
 			frappe.db.commit()
 
-def send_notification_recall_lost_opportunity():
-	recall_interval = frappe.db.get_single_value("CRM Settings", "recall_lost_opportunity_after_number_of_days")
-	if not recall_interval:
-		return
-	
-	current_date = getdate(today())
-	target_lost_date = add_days(current_date, -recall_interval)
-	
-	lost_opportunities = frappe.get_all(
+
+def trigger_recall_lost_opportunities():
+	from frappe.email.doctype.notification.notification import has_notification
+	if not has_notification(
 		"Opportunity",
-		filters={
-			"status": "Lost",
-			"disable_recall_opportunity":0,
-			"lost_date":target_lost_date
-		},
-		fields=["name", "lost_date"],
-	)
-
-	if not lost_opportunities:
+		notification_type="Recall Lost Opportunity",
+		trigger_method="notify_recall_lost_opportunity",
+	):
 		return
 
-	for opp in lost_opportunities:
-		opportunity_doc = frappe.get_doc("Opportunity", opp.get("name"))
-		opportunity_doc.send_notification_recall_lost_opportunity()
+	recall_after_days = cint(frappe.db.get_single_value("CRM Settings", "recall_lost_opportunity_days_after"))
+	if recall_after_days <= 0:
+		return
+
+	today_date = getdate()
+	target_lost_date = add_days(today_date, -recall_after_days)
+
+	lost_opportunities = frappe.get_all("Opportunity", filters={
+		"status": "Lost",
+		"lost_date": target_lost_date
+	}, pluck="name")
+
+	for name in lost_opportunities:
+		try:
+			opportunity_doc = frappe.get_doc("Opportunity", name)
+			opportunity_doc.trigger_recall_lost_opportunity()
+			frappe.db.commit()
+		except Exception:
+			frappe.db.rollback()
+			frappe.log_error(
+				title="Error triggering Recall Lost Opportunity",
+				reference_doctype="Opportunity",
+				reference_name=name,
+			)
+			frappe.db.commit()
+
 
 @frappe.whitelist()
 def schedule_follow_up(name, schedule_date, to_discuss=None):
