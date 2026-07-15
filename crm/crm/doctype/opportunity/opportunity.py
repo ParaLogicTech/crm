@@ -353,20 +353,24 @@ def auto_mark_opportunity_as_lost():
 	if lost_reason:
 		lost_reasons_list.append({'lost_reason': lost_reason})
 
-	opportunities = frappe.db.sql("""
-		SELECT name FROM tabOpportunity
-		WHERE status IN ('Open', 'Replied', 'Quotation')
-		AND modified < DATE_SUB(CURDATE(), INTERVAL %s DAY)
-	""", (mark_opportunity_lost_after_days), as_dict=True)
+	opportunities = frappe.db.sql_list("""
+		SELECT name
+		FROM `tabOpportunity`
+		WHERE status IN ('Open', 'Replied', 'Quotation') AND modified < DATE_SUB(CURDATE(), INTERVAL %s DAY)
+	""", mark_opportunity_lost_after_days)
 
-	for opportunity in opportunities:
-		doc = frappe.get_doc("Opportunity", opportunity.get("name"))
+	for name in opportunities:
 		try:
+			doc = frappe.get_doc("Opportunity", name)
 			doc.set_is_lost(True, lost_reasons_list=lost_reasons_list)
 			frappe.db.commit()
 		except Exception:
 			frappe.db.rollback()
-			doc.log_error(title=_("auto_mark_opportunity_as_lost failure"))
+			frappe.log_error(
+				title="auto_mark_opportunity_as_lost failure",
+				reference_doctype="Opportunity",
+				reference_name=name,
+			)
 			frappe.db.commit()
 
 
