@@ -3,7 +3,7 @@
 
 import frappe
 from frappe import _
-from frappe.utils import today, getdate, cint, clean_whitespace, comma_or, cstr, validate_email_address
+from frappe.utils import today, getdate, cint, clean_whitespace, comma_or, cstr, validate_email_address, add_days
 from frappe.model.mapper import get_mapped_doc
 from frappe.email.inbox import link_communication_to_document
 from frappe.utils.status_updater import StatusUpdater
@@ -171,7 +171,7 @@ class Opportunity(StatusUpdater):
 			return follow_up[0]
 
 	@frappe.whitelist()
-	def set_is_lost(self, is_lost, lost_reasons_list=None, detailed_reason=None):
+	def set_is_lost(self, is_lost, lost_reasons_list=None, detailed_reason=None, lost_date=None):
 		is_lost = cint(is_lost)
 
 		if is_lost and self.is_converted():
@@ -181,13 +181,19 @@ class Opportunity(StatusUpdater):
 
 		if is_lost:
 			self.set_status(update=True, status="Lost")
-			self.db_set("order_lost_reason", detailed_reason)
+			self.db_set({
+				'order_lost_reason': detailed_reason,
+				'lost_date': getdate(lost_date),
+			})
 			self.lost_reasons = []
 			for reason in lost_reasons_list:
 				self.append('lost_reasons', reason)
 		else:
 			self.set_status(update=True, status="Open")
-			self.db_set('order_lost_reason', None)
+			self.db_set({
+				'order_lost_reason': None,
+				'lost_date': None,
+			})
 			self.lost_reasons = []
 
 		self.update_lead_status()
@@ -232,6 +238,9 @@ class Opportunity(StatusUpdater):
 			'reference_name': self.name,
 			'communication_type': ['!=', 'Automated Message']
 		})
+
+	def trigger_recall_lost_opportunity(self):
+		self.run_method("notify_recall_lost_opportunity")
 
 
 @frappe.whitelist()
@@ -344,20 +353,60 @@ def auto_mark_opportunity_as_lost():
 	if lost_reason:
 		lost_reasons_list.append({'lost_reason': lost_reason})
 
-	opportunities = frappe.db.sql("""
-		SELECT name FROM tabOpportunity
-		WHERE status IN ('Open', 'Replied', 'Quotation')
-		AND modified < DATE_SUB(CURDATE(), INTERVAL %s DAY)
-	""", (mark_opportunity_lost_after_days), as_dict=True)
+	opportunities = frappe.db.sql_list("""
+		SELECT name
+		FROM `tabOpportunity`
+		WHERE status IN ('Open', 'Replied', 'Quotation') AND modified < DATE_SUB(CURDATE(), INTERVAL %s DAY)
+	""", mark_opportunity_lost_after_days)
 
-	for opportunity in opportunities:
-		doc = frappe.get_doc("Opportunity", opportunity.get("name"))
+	for name in opportunities:
 		try:
+			doc = frappe.get_doc("Opportunity", name)
 			doc.set_is_lost(True, lost_reasons_list=lost_reasons_list)
 			frappe.db.commit()
 		except Exception:
 			frappe.db.rollback()
-			doc.log_error(title=_("auto_mark_opportunity_as_lost failure"))
+			frappe.log_error(
+				title="auto_mark_opportunity_as_lost failure",
+				reference_doctype="Opportunity",
+				reference_name=name,
+			)
+			frappe.db.commit()
+
+
+def trigger_recall_lost_opportunities():
+	from frappe.email.doctype.notification.notification import has_notification
+	if not has_notification(
+		"Opportunity",
+		notification_type="Recall Lost Opportunity",
+		trigger_method="notify_recall_lost_opportunity",
+	):
+		return
+
+	recall_after_days = cint(frappe.db.get_single_value("CRM Settings", "recall_lost_opportunity_days_after"))
+	if recall_after_days <= 0:
+		return
+
+	today_date = getdate()
+	target_lost_date = add_days(today_date, -recall_after_days)
+
+	lost_opportunities = frappe.get_all("Opportunity", filters={
+		"status": "Lost",
+		"lost_date": target_lost_date
+	}, pluck="name")
+
+	for name in lost_opportunities:
+		try:
+			opportunity_doc = frappe.get_doc("Opportunity", name)
+			opportunity_doc.trigger_recall_lost_opportunity()
+			frappe.db.commit()
+		except Exception:
+			frappe.db.rollback()
+			frappe.log_error(
+				title="Error triggering Recall Lost Opportunity",
+				reference_doctype="Opportunity",
+				reference_name=name,
+			)
 			frappe.db.commit()
 
 

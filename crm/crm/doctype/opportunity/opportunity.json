@@ -26,6 +26,7 @@
   "mins_to_first_response",
   "lost_reason_section",
   "lost_reasons",
+  "lost_date",
   "column_break_9",
   "order_lost_reason",
   "contact_info",
@@ -496,6 +497,13 @@
   {
    "fieldname": "cb_more_info_2",
    "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "lost_date",
+   "fieldtype": "Date",
+   "label": "Lost Date",
+   "no_copy": 1,
+   "read_only": 1
   }
  ],
  "grid_page_length": 500,
@@ -503,7 +511,7 @@
  "idx": 195,
  "is_calendar_and_gantt": 1,
  "links": [],
- "modified": "2026-05-13 23:12:33.163647",
+ "modified": "2026-07-15 21:17:53.730794",
  "modified_by": "Administrator",
  "module": "CRM",
  "name": "Opportunity",

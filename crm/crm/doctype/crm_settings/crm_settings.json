@@ -13,7 +13,9 @@
   "column_break_6",
   "role_allowed_to_link_appointment_opportunity",
   "notification_settings_section",
-  "customer_birthday_notification_time"
+  "customer_birthday_notification_time",
+  "column_break_89pp",
+  "recall_lost_opportunity_days_after"
  ],
  "fields": [
   {
@@ -65,12 +67,22 @@
    "fieldtype": "Link",
    "label": "Restrict Role Allowed to Link Appointment with Opportunity",
    "options": "Role"
+  },
+  {
+   "fieldname": "column_break_89pp",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "recall_lost_opportunity_days_after",
+   "fieldtype": "Int",
+   "label": "Recall Lost Opportunity Days after Lost Date",
+   "non_negative": 1
   }
  ],
  "grid_page_length": 500,
  "issingle": 1,
  "links": [],
- "modified": "2026-04-02 12:11:32.779075",
+ "modified": "2026-07-15 21:06:37.289669",
  "modified_by": "Administrator",
  "module": "CRM",
  "name": "CRM Settings",
@@ -97,6 +109,7 @@
  ],
  "quick_entry": 1,
  "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
  "sort_field": "modified",
  "sort_order": "DESC",
  "states": [],
