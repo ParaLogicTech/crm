@@ -181,16 +181,19 @@ class Opportunity(StatusUpdater):
 
 		if is_lost:
 			self.set_status(update=True, status="Lost")
-			self.db_set("order_lost_reason", detailed_reason)
-			lost_date = getdate(lost_date)
-			self.db_set("lost_date", lost_date)
+			self.db_set({
+				'order_lost_reason': detailed_reason,
+				'lost_date': getdate(lost_date),
+			})
 			self.lost_reasons = []
 			for reason in lost_reasons_list:
 				self.append('lost_reasons', reason)
 		else:
 			self.set_status(update=True, status="Open")
-			self.db_set('order_lost_reason', None)
-			self.db_set("lost_date", None)
+			self.db_set({
+				'order_lost_reason': None,
+				'lost_date': None,
+			})
 			self.lost_reasons = []
 
 		self.update_lead_status()
