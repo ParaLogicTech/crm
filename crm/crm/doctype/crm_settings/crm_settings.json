@@ -12,7 +12,7 @@
   "opportunity_contact_no_mandatory",
   "column_break_6",
   "role_allowed_to_link_appointment_opportunity",
-  "recall_opportunity_after_the_months",
+  "recall_lost_opportunity_after_number_of_days",
   "notification_settings_section",
   "customer_birthday_notification_time"
  ],
@@ -68,16 +68,16 @@
    "options": "Role"
   },
   {
-   "fieldname": "recall_opportunity_after_the_months",
+   "fieldname": "recall_lost_opportunity_after_number_of_days",
    "fieldtype": "Int",
-   "label": "Recall Opportunity After The Months",
+   "label": "Recall Lost Opportunity After The Number Of Days",
    "non_negative": 1
   }
  ],
  "grid_page_length": 500,
  "issingle": 1,
  "links": [],
- "modified": "2026-07-13 16:42:31.791688",
+ "modified": "2026-07-15 16:34:48.712964",
  "modified_by": "Administrator",
  "module": "CRM",
  "name": "CRM Settings",
