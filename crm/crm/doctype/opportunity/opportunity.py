@@ -4,7 +4,6 @@
 import frappe
 from frappe import _
 from frappe.utils import today, getdate, cint, clean_whitespace, comma_or, cstr, validate_email_address, add_days
-from dateutil.relativedelta import relativedelta
 from frappe.model.mapper import get_mapped_doc
 from frappe.email.inbox import link_communication_to_document
 from frappe.utils.status_updater import StatusUpdater
