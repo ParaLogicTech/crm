@@ -69,8 +69,7 @@
   "ratings_section",
   "next_contact",
   "contact_schedule",
-  "status",
-  "disable_recall_opportunity"
+  "status"
  ],
  "fields": [
   {
@@ -505,13 +504,6 @@
    "label": "Lost Date",
    "no_copy": 1,
    "read_only": 1
-  },
-  {
-   "default": "0",
-   "fieldname": "disable_recall_opportunity",
-   "fieldtype": "Check",
-   "label": "Disable Recall Opportunity",
-   "no_copy": 1
   }
  ],
  "grid_page_length": 500,
@@ -519,7 +511,7 @@
  "idx": 195,
  "is_calendar_and_gantt": 1,
  "links": [],
- "modified": "2026-07-13 21:16:41.787748",
+ "modified": "2026-07-15 21:17:53.730794",
  "modified_by": "Administrator",
  "module": "CRM",
  "name": "Opportunity",
