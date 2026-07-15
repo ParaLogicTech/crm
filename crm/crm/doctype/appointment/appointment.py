@@ -972,8 +972,18 @@ def send_appointment_reminder_notifications():
 	appointments_to_remind = get_appointments_for_reminder_notification(reminder_date)
 
 	for name in appointments_to_remind:
-		doc = frappe.get_doc("Appointment", name)
-		doc.send_appointment_reminder_notification()
+		try:
+			doc = frappe.get_doc("Appointment", name)
+			doc.send_appointment_reminder_notification()
+			frappe.db.commit()
+		except Exception:
+			frappe.db.rollback()
+			frappe.log_error(
+				title="Error sending Appointment Reminder Notification",
+				reference_doctype="Appointment",
+				reference_name=name,
+			)
+			frappe.db.commit()
 
 	set_notification_last_scheduled(
 		"Appointment",
@@ -1007,8 +1017,18 @@ def send_appointment_missed_notifications():
 	appointments_to_notify = get_appointments_for_missed_notification(notification_date)
 
 	for name in appointments_to_notify:
-		doc = frappe.get_doc("Appointment", name)
-		doc.send_appointment_missed_notification()
+		try:
+			doc = frappe.get_doc("Appointment", name)
+			doc.send_appointment_missed_notification()
+			frappe.db.commit()
+		except Exception:
+			frappe.db.rollback()
+			frappe.log_error(
+				title="Error sending Appointment Missed Notification",
+				reference_doctype="Appointment",
+				reference_name=name,
+			)
+			frappe.db.commit()
 
 	set_notification_last_scheduled(
 		"Appointment",
