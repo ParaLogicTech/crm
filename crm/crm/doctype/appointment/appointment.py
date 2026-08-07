@@ -641,6 +641,9 @@ class Appointment(StatusUpdater):
 
 @frappe.whitelist()
 def get_appointment_timeslots(scheduled_date, appointment_type, appointment=None, include_available_agents=False):
+	appointment_type_doc = frappe.get_cached_doc("Appointment Type", appointment_type)
+	appointment_type_doc.check_permission("read")
+
 	include_available_agents = cint(include_available_agents)
 
 	out = frappe._dict({
@@ -652,7 +655,6 @@ def get_appointment_timeslots(scheduled_date, appointment_type, appointment=None
 		return out
 
 	scheduled_date = getdate(scheduled_date)
-	appointment_type_doc = frappe.get_cached_doc("Appointment Type", appointment_type)
 
 	out.holiday = appointment_type_doc.is_holiday(scheduled_date)
 
@@ -694,6 +696,8 @@ def get_appointment_timeslots(scheduled_date, appointment_type, appointment=None
 @frappe.whitelist()
 def get_appointment_timeslots_for_daterange(appointment_type, from_date, to_date):
 	appointment_type_doc = frappe.get_cached_doc("Appointment Type", appointment_type)
+	appointment_type_doc.check_permission("read")
+
 	no_of_agents = cint(appointment_type_doc.number_of_agents)
 
 	from_date = getdate(from_date)
