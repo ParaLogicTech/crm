@@ -37,6 +37,7 @@
   {
    "fieldname": "description",
    "fieldtype": "Small Text",
+   "in_global_search": 1,
    "in_list_view": 1,
    "label": "Description",
    "oldfieldname": "description",
@@ -73,7 +74,7 @@
  "icon": "fa fa-bullhorn",
  "idx": 1,
  "links": [],
- "modified": "2026-04-02 01:12:28.801685",
+ "modified": "2026-09-12 17:21:45.579714",
  "modified_by": "Administrator",
  "module": "CRM",
  "name": "Campaign",
@@ -146,6 +147,8 @@
   }
  ],
  "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "show_name_in_global_search": 1,
  "sort_field": "modified",
  "sort_order": "DESC",
  "states": [],

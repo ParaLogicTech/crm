@@ -146,7 +146,7 @@
  ],
  "grid_page_length": 500,
  "links": [],
- "modified": "2026-03-25 15:09:18.550320",
+ "modified": "2026-09-12 16:49:06.554318",
  "modified_by": "Administrator",
  "module": "CRM",
  "name": "Appointment Type",
@@ -206,6 +206,8 @@
   }
  ],
  "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "show_name_in_global_search": 1,
  "sort_field": "idx",
  "sort_order": "DESC",
  "states": [],

@@ -30,7 +30,7 @@
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-05-01 12:23:21.902403",
+ "modified": "2026-09-12 22:26:51.188561",
  "modified_by": "Administrator",
  "module": "CRM",
  "name": "Feedback Status",
@@ -78,6 +78,9 @@
   }
  ],
  "quick_entry": 1,
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "show_name_in_global_search": 1,
  "sort_field": "modified",
  "sort_order": "DESC",
  "states": []

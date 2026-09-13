@@ -26,7 +26,7 @@
   }
  ],
  "links": [],
- "modified": "2024-11-29 22:42:42.967750",
+ "modified": "2026-09-12 16:49:18.867436",
  "modified_by": "Administrator",
  "module": "CRM",
  "name": "Lead Source",
@@ -74,6 +74,9 @@
   }
  ],
  "quick_entry": 1,
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "show_name_in_global_search": 1,
  "sort_field": "modified",
  "sort_order": "DESC",
  "states": []

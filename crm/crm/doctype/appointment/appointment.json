@@ -215,7 +215,6 @@
    "allow_on_submit": 1,
    "fieldname": "party_name",
    "fieldtype": "Dynamic Link",
-   "in_global_search": 1,
    "in_standard_filter": 1,
    "label": "Party",
    "options": "appointment_for",
@@ -462,12 +461,14 @@
    "allow_on_submit": 1,
    "fieldname": "remarks",
    "fieldtype": "Small Text",
+   "in_global_search": 1,
    "label": "Remarks",
    "no_copy": 1
   },
   {
    "fieldname": "opportunity",
    "fieldtype": "Link",
+   "in_global_search": 1,
    "label": "Opportunity",
    "no_copy": 1,
    "options": "Opportunity",
@@ -549,6 +550,7 @@
   {
    "fieldname": "campaign",
    "fieldtype": "Link",
+   "in_global_search": 1,
    "label": "Campaign",
    "no_copy": 1,
    "options": "Campaign"
@@ -578,7 +580,7 @@
  "is_calendar_and_gantt": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2026-03-27 13:51:42.591444",
+ "modified": "2026-09-12 17:57:19.963539",
  "modified_by": "Administrator",
  "module": "CRM",
  "name": "Appointment",
@@ -644,7 +646,9 @@
   }
  ],
  "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
  "search_fields": "party_name, customer_name, scheduled_dt",
+ "show_name_in_global_search": 1,
  "sort_field": "scheduled_dt",
  "sort_order": "DESC",
  "states": [],
