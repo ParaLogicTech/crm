@@ -844,11 +844,14 @@ def get_appointments_in_slot(start_dt, end_dt, appointment_type=None, appointmen
 def auto_mark_missed():
 	auto_mark_missed_days = cint(frappe.get_cached_value("Appointment Booking Settings", None, "auto_mark_missed_days"))
 	if auto_mark_missed_days > 0:
+		past_date = add_days(today(), -auto_mark_missed_days)
 		frappe.db.sql("""
-			update `tabAppointment`
-			set status = 'Missed'
-			where docstatus = 1 and status = 'Open' and DATEDIFF(CURDATE(), scheduled_date) >= %s
-		""", auto_mark_missed_days)
+			UPDATE `tabAppointment`
+			SET status = 'Missed'
+			WHERE docstatus = 1
+				AND status = 'Open'
+				AND scheduled_date <= %s
+		""", (past_date,))
 
 
 @frappe.whitelist()
