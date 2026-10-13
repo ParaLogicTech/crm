@@ -15,7 +15,8 @@
   {
    "fieldname": "auto_mark_missed_days",
    "fieldtype": "Int",
-   "label": "Automatically Mark Appointment as Missed After Days"
+   "label": "Automatically Mark Appointment as Missed After Days",
+   "non_negative": 1
   },
   {
    "fieldname": "column_break_4",
@@ -29,17 +30,20 @@
   {
    "fieldname": "appointment_reminder_confirmation_hours",
    "fieldtype": "Int",
-   "label": "Appointment Reminder Required Hours After Confirmation"
+   "label": "Appointment Reminder Required Hours After Confirmation",
+   "non_negative": 1
   },
   {
    "fieldname": "appointment_reminder_days_before",
    "fieldtype": "Int",
-   "label": "Appointment Reminder Days Before Appointment"
+   "label": "Appointment Reminder Days Before Appointment",
+   "non_negative": 1
   }
  ],
+ "grid_page_length": 500,
  "issingle": 1,
  "links": [],
- "modified": "2024-11-29 22:46:12.591296",
+ "modified": "2026-10-13 20:35:57.078956",
  "modified_by": "Administrator",
  "module": "CRM",
  "name": "Appointment Booking Settings",
@@ -76,6 +80,8 @@
   }
  ],
  "quick_entry": 1,
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
  "sort_field": "modified",
  "sort_order": "DESC",
  "states": [],
