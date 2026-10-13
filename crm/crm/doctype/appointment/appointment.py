@@ -847,8 +847,8 @@ def auto_mark_missed():
 		frappe.db.sql("""
 			update `tabAppointment`
 			set status = 'Missed'
-			where docstatus = 1 and status = 'Open' and DATEDIFF(CURDATE(), scheduled_date) >= %s
-		""", auto_mark_missed_days)
+			where docstatus = 1 and status = 'Open' and DATEDIFF(%s, scheduled_date) >= %s
+		""", (today(), auto_mark_missed_days))
 
 
 @frappe.whitelist()
