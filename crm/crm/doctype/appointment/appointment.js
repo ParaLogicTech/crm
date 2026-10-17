@@ -82,12 +82,6 @@ crm.Appointment = class Appointment extends crm.QuickContacts {
 	}
 
 	setup_buttons() {
-		if (!this.frm.doc.__islocal) {
-			this.frm.page.add_menu_item(__('Send SMS'), () => {
-				this.send_sms();
-			});
-		}
-
 		if (this.frm.doc.calendar_event) {
 			this.frm.add_custom_button(__(this.frm.doc.calendar_event), () => {
 				frappe.set_route("Form", "Event", this.frm.doc.calendar_event);
@@ -465,15 +459,6 @@ crm.Appointment = class Appointment extends crm.QuickContacts {
 		} else {
 			return false;
 		}
-	}
-
-	send_sms(notification_type) {
-		new frappe.SMSManager(this.frm.doc, {
-			notification_type: notification_type,
-			mobile_no: this.frm.doc.contact_mobile,
-			party_doctype: this.frm.doc.appointment_for,
-			party: this.frm.doc.party_name,
-		});
 	}
 };
 

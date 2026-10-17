@@ -26,10 +26,6 @@ crm.Opportunity = class Opportunity extends frappe.ui.form.Controller {
 			if (this.frm.perm[0].write) {
 				this.frm.add_custom_button(__("Submit Communication"), () => this.submit_communication());
 
-				this.frm.page.add_menu_item(__('Send SMS'), () => {
-					this.send_sms();
-				});
-
 				if (!["Lost", "Closed", "Converted"].includes(this.frm.doc.status)) {
 					this.frm.add_custom_button(__("Lost"), () => {
 						crm.utils.set_as_lost_dialog(this.frm);
@@ -289,15 +285,6 @@ crm.Opportunity = class Opportunity extends frappe.ui.form.Controller {
 		frappe.model.open_mapped_doc({
 			method: "crm.crm.doctype.opportunity.opportunity.make_appointment",
 			frm: this.frm
-		});
-	}
-
-	send_sms(notification_type) {
-		new frappe.SMSManager(this.frm.doc, {
-			notification_type: notification_type,
-			mobile_no: this.frm.doc.contact_mobile || this.frm.doc.contact_phone,
-			party_doctype: this.frm.doc.opportunity_from,
-			party: this.frm.doc.party_name,
 		});
 	}
 
