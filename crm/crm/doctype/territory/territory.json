@@ -103,11 +103,12 @@
    "report_hide": 1
   }
  ],
+ "grid_page_length": 500,
  "icon": "fa fa-map-marker",
  "idx": 1,
  "is_tree": 1,
  "links": [],
- "modified": "2024-11-29 22:47:17.339115",
+ "modified": "2026-10-31 19:42:19.689097",
  "modified_by": "Administrator",
  "module": "CRM",
  "name": "Territory",
@@ -165,9 +166,11 @@
    "role": "Stock User"
   }
  ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
  "search_fields": "parent_territory,territory_manager",
  "show_name_in_global_search": 1,
- "sort_field": "modified",
+ "sort_field": "idx",
  "sort_order": "DESC",
  "states": []
 }

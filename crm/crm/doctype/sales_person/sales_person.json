@@ -146,7 +146,7 @@
  "idx": 1,
  "is_tree": 1,
  "links": [],
- "modified": "2026-09-12 16:59:51.738215",
+ "modified": "2026-10-31 19:43:46.050256",
  "modified_by": "Administrator",
  "module": "CRM",
  "name": "Sales Person",
@@ -227,7 +227,7 @@
  "rows_threshold_for_grid_search": 20,
  "search_fields": "parent_sales_person",
  "show_name_in_global_search": 1,
- "sort_field": "modified",
+ "sort_field": "idx",
  "sort_order": "DESC",
  "states": [],
  "track_changes": 1
