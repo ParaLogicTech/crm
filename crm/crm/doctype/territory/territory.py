@@ -13,7 +13,7 @@ class Territory(NestedSet):
 			self.parent_territory = get_root_of("Territory")
 
 	def on_update(self):
-		super(Territory, self).on_update()
+		super().on_update()
 		self.validate_one_root()
 
 

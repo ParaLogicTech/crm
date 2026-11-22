@@ -14,7 +14,7 @@ sender_field = "email_id"
 
 class Lead(StatusUpdater):
 	def __init__(self, *args, **kwargs):
-		super(Lead, self).__init__(*args, **kwargs)
+		super().__init__(*args, **kwargs)
 		self.status_map = [
 			["Lost Opportunity", "is_lost_opportunity"],
 			["Opportunity", "is_opportunity"],

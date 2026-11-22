@@ -13,7 +13,7 @@ class SalesPerson(NestedSet):
 		self.set_missing_parent_sales_person()
 
 	def on_update(self):
-		super(SalesPerson, self).on_update()
+		super().on_update()
 		self.validate_one_root()
 
 	def set_missing_parent_sales_person(self):
