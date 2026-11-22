@@ -8,7 +8,7 @@ from crm.crm.doctype.appointment.appointment import get_appointments_for_reminde
 	get_appointment_reminders_scheduled_time, get_reminder_date_from_appointment_date, automated_reminder_enabled
 
 
-class AppointmentSheetReport(object):
+class AppointmentSheetReport:
 	date_format = "d/MM/y"
 	time_format = "hh:mm a"
 	datetime_format = "{0}, {1}".format(date_format, time_format)
