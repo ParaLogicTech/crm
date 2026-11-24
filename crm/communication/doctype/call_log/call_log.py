@@ -22,14 +22,19 @@ class CallLog(Document):
 		if not doc_before_save:
 			return
 		if doc_before_save.status in ["Ringing"] and self.status in ["Missed", "Completed"]:
-			frappe.publish_realtime("call_{id}_disconnected".format(id=self.id), self)
+			for email in self.get_call_popup_users():
+				frappe.publish_realtime("call_{id}_disconnected".format(id=self.id), self, user=email)
 		elif doc_before_save.to != self.to:
 			self.trigger_call_popup()
 
 	def trigger_call_popup(self):
+		for email in self.get_call_popup_users():
+			frappe.publish_realtime("show_call_popup", self, user=email)
+
+	def get_call_popup_users(self):
 		# Popup recipients are Employees, which come from ERPNext. Without it there is no one to notify.
 		if not has_employee_doctypes():
-			return
+			return []
 
 		scheduled_employees = get_scheduled_employees_for_popup(self.medium)
 		employee_emails = get_employees_with_number(self.to)
@@ -40,8 +45,7 @@ class CallLog(Document):
 		# # if no employee found with matching phone number then show popup to scheduled employees
 		# emails = emails or scheduled_employees if employee_emails
 
-		for email in emails:
-			frappe.publish_realtime("show_call_popup", self, user=email)
+		return emails
 
 
 @frappe.whitelist()

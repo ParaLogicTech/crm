@@ -120,13 +120,31 @@ class TestCallLog(CRMTestCase):
 
 	def test_disconnect_event(self):
 		call_log = make_call_log(status="Ringing")
+		popup_users = {"agent1@example.com", "agent2@example.com"}
 
-		with patch("frappe.publish_realtime") as publish_realtime:
+		with (
+			patch.object(type(call_log), "get_call_popup_users", return_value=popup_users),
+			patch("frappe.publish_realtime") as publish_realtime,
+		):
+			call_log.status = "Completed"
+			call_log.save()
+
+		event = f"call_{call_log.id}_disconnected"
+		recipients = {c.kwargs.get("user") for c in publish_realtime.call_args_list if c.args[0] == event}
+		self.assertEqual(recipients, popup_users)
+
+	def test_no_disconnect_event_without_popup_users(self):
+		call_log = make_call_log(status="Ringing")
+
+		with (
+			patch.object(type(call_log), "get_call_popup_users", return_value=set()),
+			patch("frappe.publish_realtime") as publish_realtime,
+		):
 			call_log.status = "Completed"
 			call_log.save()
 
 		events = [c.args[0] for c in publish_realtime.call_args_list]
-		self.assertIn(f"call_{call_log.id}_disconnected", events)
+		self.assertNotIn(f"call_{call_log.id}_disconnected", events)
 
 	def test_no_disconnect_event_while_in_progress(self):
 		call_log = make_call_log(status="Ringing")
