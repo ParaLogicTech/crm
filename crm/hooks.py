@@ -28,11 +28,11 @@ doc_events = {
 		"after_insert": "crm.communication.doctype.call_log.call_log.set_caller_information",
 	},
 	"Lead": {
-		"after_insert": "crm.communication.doctype.call_log.call_log.set_caller_information"
+		"after_insert": "crm.communication.doctype.call_log.call_log.set_caller_information",
 	},
 	"Email Unsubscribe": {
-		"after_insert": "crm.crm.doctype.email_campaign.email_campaign.unsubscribe_recipient"
-	}
+		"after_insert": "crm.crm.doctype.email_campaign.email_campaign.unsubscribe_recipient",
+	},
 }
 
 fixtures = [
@@ -42,8 +42,8 @@ fixtures = [
 			"name": ["in", [
 				"Contact Us Settings-default_lead_source",
 				"Contact Query Option-opportunity_type",
-			]]
-		}
+			]],
+		},
 	},
 ]
 
@@ -62,7 +62,7 @@ scheduler_events = {
 		"crm.crm.doctype.contract.contract.update_status_for_contracts",
 		"crm.crm.doctype.email_campaign.email_campaign.process_email_campaigns",
 		"crm.crm.doctype.opportunity.opportunity.trigger_recall_lost_opportunities",
-	]
+	],
 }
 
 standard_queries = {
@@ -94,18 +94,18 @@ user_data_fields = [
 	},
 	{
 		"doctype": "Opportunity",
-		"match_field": 'contact_email',
+		"match_field": "contact_email",
 		"personal_fields": [
 			"customer_name", "contact_display",
 			"contact_mobile", "contact_phone", "contact_phone",
-			"address_display"
+			"address_display",
 		],
-	}
+	},
 ]
 
 global_search_doctypes = {
 	"Default": [
 		{"doctype": "Lead", "index": 0},
 		{"doctype": "Opportunity", "index": 1},
-	]
+	],
 }

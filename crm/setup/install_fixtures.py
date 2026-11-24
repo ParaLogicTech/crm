@@ -10,7 +10,7 @@ lead_sources = [
 	"Mass Mailing",
 	"Customer's Vendor",
 	"Campaign",
-	"Walk In"
+	"Walk In",
 ]
 
 opportunity_types = [
@@ -86,7 +86,7 @@ industry_types = [
 	"Telecommunications",
 	"Television",
 	"Transportation",
-	"Venture Capital"
+	"Venture Capital",
 ]
 
 
@@ -98,16 +98,16 @@ def get_default_records(country):
 		"Sales Stage": [{"doctype": "Sales Stage", "stage_name": _(d)} for d in sales_stages],
 		"Industry Type": [{"doctype": "Industry Type", "industry": _(d)} for d in industry_types],
 		"Sales Person": [
-			{'doctype': 'Sales Person', 'sales_person_name': _('Sales Team'), 'is_group': 1, "parent_sales_person": ""}
+			{"doctype": "Sales Person", "sales_person_name": _("Sales Team"), "is_group": 1, "parent_sales_person": ""},
 		],
 		"Territory": [
-			{'doctype': 'Territory', 'territory_name': _('All Territories'), 'is_group': 1,
-				'name': _('All Territories'), 'parent_territory': ''},
-			{'doctype': 'Territory', 'territory_name': country.replace("'", ""), 'is_group': 0,
-				'parent_territory': _('All Territories')},
-			{'doctype': 'Territory', 'territory_name': _("Rest Of The World"), 'is_group': 0,
-				'parent_territory': _('All Territories')},
-		]
+			{"doctype": "Territory", "territory_name": _("All Territories"), "is_group": 1,
+				"name": _("All Territories"), "parent_territory": ""},
+			{"doctype": "Territory", "territory_name": country.replace("'", ""), "is_group": 0,
+				"parent_territory": _("All Territories")},
+			{"doctype": "Territory", "territory_name": _("Rest Of The World"), "is_group": 0,
+				"parent_territory": _("All Territories")},
+		],
 	}
 
 

@@ -163,7 +163,7 @@ def make_call_log(**kwargs):
 			"id": "_Test Call " + frappe.generate_hash(length=8),
 			"from": "03000000001",
 			"status": "Ringing",
-		}
+		},
 	)
 	call_log.update(kwargs)
 	call_log.insert()
@@ -176,5 +176,5 @@ def make_contact(phone, first_name="_Test Caller"):
 			"doctype": "Contact",
 			"first_name": first_name,
 			"phone_nos": [{"phone": phone, "is_primary_mobile_no": 1}],
-		}
+		},
 	).insert()

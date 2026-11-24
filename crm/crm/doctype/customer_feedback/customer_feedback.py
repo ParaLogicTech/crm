@@ -1,16 +1,16 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2023, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
+
+import json
 
 import frappe
 from frappe import _
 from frappe.model.document import Document
-from frappe.utils import cstr, comma_or
 from frappe.model.mapper import get_mapped_doc
-from frappe.utils import getdate, get_time, get_datetime, combine_datetime
+from frappe.utils import combine_datetime, comma_or, cstr, get_datetime, get_time, getdate
+
 from crm.crm.doctype.sales_person.sales_person import get_sales_person_from_user
 from crm.crm.utils import _get_contact_details, get_primary_contact
-import json
 
 
 class CustomerFeedback(Document):
@@ -19,8 +19,8 @@ class CustomerFeedback(Document):
 	def __init__(self, *args, **kwargs):
 		super().__init__(*args, **kwargs)
 		self.force_party_fields = [
-			'customer_name',
-			'contact_display', 'contact_email', 'contact_mobile', 'contact_phone'
+			"customer_name",
+			"contact_display", "contact_email", "contact_mobile", "contact_phone",
 		]
 
 	def validate(self):
@@ -69,7 +69,7 @@ class CustomerFeedback(Document):
 			self.party_name = None
 			if throw:
 				frappe.throw(_("Could not determine party from reference document {0}").format(
-					frappe.get_desk_link(source.doctype, source.name)
+					frappe.get_desk_link(source.doctype, source.name),
 				))
 
 	def set_missing_values(self):
@@ -93,15 +93,15 @@ class CustomerFeedback(Document):
 				"Customer Feedback",
 				self.name,
 				["contact_remarks", "customer_feedback"],
-				as_dict=True
+				as_dict=True,
 			) or {}
 
 	def update_communication(self):
-		previous_values = self.get('previous_values') or {}
-		if self.get("contact_remarks") and cstr(previous_values.get('contact_remarks')) != cstr(self.contact_remarks):
+		previous_values = self.get("previous_values") or {}
+		if self.get("contact_remarks") and cstr(previous_values.get("contact_remarks")) != cstr(self.contact_remarks):
 			self.make_communication_doc("contact_remarks", set_timeline_links=False).insert()
 
-		if self.get("customer_feedback") and cstr(previous_values.get('customer_feedback')) != cstr(self.customer_feedback):
+		if self.get("customer_feedback") and cstr(previous_values.get("customer_feedback")) != cstr(self.customer_feedback):
 			self.make_communication_doc("customer_feedback", set_timeline_links=True).insert()
 
 	def make_communication_doc(self, for_field, set_timeline_links):
@@ -112,20 +112,20 @@ class CustomerFeedback(Document):
 
 		communication_doc = frappe.get_doc({
 			"doctype": "Communication",
-			"reference_doctype": self.get('doctype'),
-			"reference_name": self.get('name'),
+			"reference_doctype": self.get("doctype"),
+			"reference_name": self.get("name"),
 			"content": self.get(for_field),
 			"communication_type": "Feedback",
 			"sent_or_received": "Received",
 			"subject": subject,
-			"sender": frappe.session.user
+			"sender": frappe.session.user,
 		})
 
 		if set_timeline_links:
 			if self.reference_doctype and self.reference_name:
 				communication_doc.append("timeline_links", {
 					"link_doctype": self.reference_doctype,
-					"link_name": self.reference_name
+					"link_name": self.reference_name,
 				})
 
 			if self.feedback_from and self.party_name:
@@ -145,13 +145,13 @@ class CustomerFeedback(Document):
 			sub_type_mandatory = frappe.get_cached_value("Feedback Type", self.feedback_type, "feedback_sub_type_mandatory")
 			if sub_type_mandatory and not self.feedback_sub_type:
 				frappe.throw(_("Feedback Sub Type is mandatory for Feedback Type {0}").format(
-					frappe.bold(self.feedback_type)
+					frappe.bold(self.feedback_type),
 				))
 
 			status_mandatory = frappe.get_cached_value("Feedback Type", self.feedback_type, "feedback_status_mandatory")
 			if status_mandatory and not self.feedback_status:
 				frappe.throw(_("Feedback Status is mandatory for Feedback Type {0}").format(
-					frappe.bold(self.feedback_type)
+					frappe.bold(self.feedback_type),
 				))
 
 		if self.feedback_sub_type:
@@ -179,7 +179,7 @@ class CustomerFeedback(Document):
 				self.set(k, v)
 
 	def set_sales_person_from_user(self):
-		if not self.get('sales_person') and self.is_new():
+		if not self.get("sales_person") and self.is_new():
 			self.sales_person = get_sales_person_from_user()
 
 	def set_sales_person_details(self):
@@ -242,7 +242,7 @@ def get_customer_feedback_contact_details(args):
 @frappe.whitelist()
 def submit_customer_feedback(reference_doctype, reference_name, feedback_or_remark, message):
 	if not message:
-		frappe.throw(_('Message cannot be empty'))
+		frappe.throw(_("Message cannot be empty"))
 
 	if not frappe.db.exists(reference_doctype, reference_name):
 		frappe.throw(_("{0} {1} does not exist".format(reference_doctype, reference_name)))
@@ -257,31 +257,31 @@ def submit_customer_feedback(reference_doctype, reference_name, feedback_or_rema
 		feedback_doc.update({
 			"feedback_date": cur_date,
 			"feedback_time": cur_time,
-			"customer_feedback": message
+			"customer_feedback": message,
 		})
 	else:
 		feedback_doc.update({
 			"contact_date": cur_date,
 			"contact_time": cur_time,
-			"contact_remarks": message
+			"contact_remarks": message,
 		})
 
 	feedback_doc.save()
 
 	return {
-		"contact_remarks": feedback_doc.get('contact_remarks'),
-		"customer_feedback": feedback_doc.get('customer_feedback'),
+		"contact_remarks": feedback_doc.get("contact_remarks"),
+		"customer_feedback": feedback_doc.get("customer_feedback"),
 		"contact_dt": combine_datetime(feedback_doc.contact_date, feedback_doc.contact_time)
-			if feedback_doc.get('contact_remarks') else None,
+			if feedback_doc.get("contact_remarks") else None,
 		"feedback_dt": combine_datetime(feedback_doc.feedback_date, feedback_doc.feedback_time)
-			if feedback_doc.get('customer_feedback') else None
+			if feedback_doc.get("customer_feedback") else None,
 	}
 
 
 def get_customer_feedback_doc(reference_doctype, reference_name):
 	filters = {
-		'reference_doctype': reference_doctype,
-		'reference_name': reference_name
+		"reference_doctype": reference_doctype,
+		"reference_name": reference_name,
 	}
 
 	customer_feedback = frappe.db.get_value("Customer Feedback", filters=filters)
@@ -303,7 +303,7 @@ def make_feedback_doc(reference_doctype, reference_name):
 			"doctype": "Customer Feedback",
 			"field_map": {
 				"doctype": "reference_doctype",
-				"name": "reference_name"
-			}
+				"name": "reference_name",
+			},
 		},
 	}, postprocess=postprocess)

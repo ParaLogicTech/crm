@@ -1,11 +1,12 @@
-frappe.listview_settings['Customer Feedback'] = {
+frappe.listview_settings["Customer Feedback"] = {
 	get_indicator: function(doc) {
-		if(doc.status == "Pending") {
-			var color = "orange";
+		let color;
+		if (doc.status == "Pending") {
+			color = "orange";
 		} else if (doc.status == "Completed") {
-			var color = "green";
+			color = "green";
 		}
-		return [__(doc.status), color, "status,=," + doc.status]
+		return [__(doc.status), color, "status,=," + doc.status];
 	},
 
 	onload: function(listview) {
@@ -14,9 +15,9 @@ frappe.listview_settings['Customer Feedback'] = {
 				return {
 					"filters": {
 						"name": ["in", crm.utils.get_feedback_allowed_party_types()],
-					}
+					},
 				};
 			};
 		}
-	}
+	},
 };

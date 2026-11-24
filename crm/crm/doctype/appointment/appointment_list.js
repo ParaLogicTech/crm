@@ -1,6 +1,6 @@
-frappe.listview_settings['Appointment'] = {
+frappe.listview_settings["Appointment"] = {
 	add_fields: ["status", "docstatus", "end_dt"],
-	get_indicator: function (doc) {
+	get_indicator: function(doc) {
 		if (doc.status == "Open") {
 			var is_late = false;
 			if (doc.end_dt) {
@@ -18,9 +18,9 @@ frappe.listview_settings['Appointment'] = {
 				return [__(doc.status), "orange", "status,=," + doc.status];
 			}
 		} else if (doc.status == "Rescheduled") {
-			 return [__(doc.status), "light-blue", "status,=," + doc.status];
+			return [__(doc.status), "light-blue", "status,=," + doc.status];
 		} else if (doc.status == "Checked In") {
-			 return [__(doc.status), "blue", "status,=," + doc.status];
+			return [__(doc.status), "blue", "status,=," + doc.status];
 		} else if (doc.status == "Missed") {
 			return [__(doc.status), "grey", "status,=," + doc.status];
 		} else if (["Closed", "Converted"].includes(doc.status)) {
@@ -34,9 +34,9 @@ frappe.listview_settings['Appointment'] = {
 				return {
 					"filters": {
 						"name": ["in", crm.utils.get_appointment_allowed_party_types()],
-					}
+					},
 				};
 			};
 		}
 	},
-}
+};

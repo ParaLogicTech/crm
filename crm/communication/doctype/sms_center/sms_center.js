@@ -31,12 +31,12 @@ extend_cscript(cur_frm.cscript, {
 			freeze_message: __("Creating Receiver List"),
 			callback: () => {
 				this.set_message_count();
-			}
+			},
 		});
 	},
 
 	receiver_list() {
-		let receivers = cstr(this.frm.doc.receiver_list).split('\n').filter(d => d);
+		let receivers = cstr(this.frm.doc.receiver_list).split("\n").filter(d => d);
 		this.frm.set_value("total_receivers", receivers.length);
 	},
 
@@ -56,5 +56,5 @@ extend_cscript(cur_frm.cscript, {
 		this.frm.set_value("total_characters", total_characters);
 		this.frm.set_value("total_messages_per_receiver", this.frm.doc.message ? total_msg : 0);
 		this.frm.set_value("total_messages", this.frm.doc.message ? total_msg * cint(this.frm.doc.total_receivers) : 0);
-	}
+	},
 });

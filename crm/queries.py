@@ -1,5 +1,5 @@
 import frappe
-from frappe.desk.reportview import get_match_cond, get_filters_cond
+from frappe.desk.reportview import get_filters_cond, get_match_cond
 from frappe.utils import unique
 
 
@@ -24,16 +24,16 @@ def lead_query(doctype, txt, searchfield, start, page_len, filters):
 			modified desc,
 			name, lead_name
 		limit %(start)s, %(page_len)s""".format(**{
-			'fields': ", ".join(fields),
+			"fields": ", ".join(fields),
 			"scond": searchfields,
-			'key': searchfield,
-			'mcond': get_match_cond(doctype),
-			"fcond": get_filters_cond(doctype, filters, []).replace('%', '%%'),
+			"key": searchfield,
+			"mcond": get_match_cond(doctype),
+			"fcond": get_filters_cond(doctype, filters, []).replace("%", "%%"),
 		}), {
-			'txt': "%%%s%%" % txt,
-			'_txt': txt.replace("%", ""),
-			'start': start,
-			'page_len': page_len
+			"txt": "%%%s%%" % txt,
+			"_txt": txt.replace("%", ""),
+			"start": start,
+			"page_len": page_len,
 		})
 
 

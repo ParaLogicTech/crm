@@ -24,7 +24,7 @@ class TestContract(CRMTestCase):
 
 	def test_active_signed_contract_status(self):
 		contract = make_contract(
-			is_signed=1, start_date=add_days(nowdate(), -1), end_date=add_days(nowdate(), 1)
+			is_signed=1, start_date=add_days(nowdate(), -1), end_date=add_days(nowdate(), 1),
 		)
 		self.assertEqual(contract.status, "Active")
 
@@ -34,13 +34,13 @@ class TestContract(CRMTestCase):
 
 	def test_past_inactive_signed_contract_status(self):
 		contract = make_contract(
-			is_signed=1, start_date=add_days(nowdate(), -2), end_date=add_days(nowdate(), -1)
+			is_signed=1, start_date=add_days(nowdate(), -2), end_date=add_days(nowdate(), -1),
 		)
 		self.assertEqual(contract.status, "Inactive")
 
 	def test_future_inactive_signed_contract_status(self):
 		contract = make_contract(
-			is_signed=1, start_date=add_days(nowdate(), 1), end_date=add_days(nowdate(), 2)
+			is_signed=1, start_date=add_days(nowdate(), 1), end_date=add_days(nowdate(), 2),
 		)
 		self.assertEqual(contract.status, "Inactive")
 
@@ -115,7 +115,7 @@ class TestContract(CRMTestCase):
 
 	def test_update_status_for_contracts(self):
 		contract = make_contract(
-			is_signed=1, start_date=add_days(nowdate(), -10), end_date=add_days(nowdate(), 10)
+			is_signed=1, start_date=add_days(nowdate(), -10), end_date=add_days(nowdate(), 10),
 		)
 		contract.submit()
 		self.assertEqual(contract.status, "Active")
@@ -157,5 +157,5 @@ def make_contract_template():
 			"doctype": "Contract Template",
 			"title": "_Test Contract Template " + frappe.generate_hash(length=8),
 			"contract_terms": "Template terms",
-		}
+		},
 	).insert()

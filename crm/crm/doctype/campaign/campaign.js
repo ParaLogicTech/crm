@@ -4,5 +4,5 @@
 frappe.ui.form.on("Campaign", {
 	refresh: function(frm) {
 
-	}
+	},
 });

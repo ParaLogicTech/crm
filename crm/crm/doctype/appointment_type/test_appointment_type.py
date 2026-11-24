@@ -84,7 +84,7 @@ class TestAppointmentType(CRMTestCase):
 		)
 
 		self.assertEqual(
-			appointment_type.get_timeslots(date), [(get_dt(date, "12:00"), get_dt(date, "13:00"))]
+			appointment_type.get_timeslots(date), [(get_dt(date, "12:00"), get_dt(date, "13:00"))],
 		)
 		self.assertEqual(
 			appointment_type.get_timeslots(add_days(date, 7)),
@@ -110,7 +110,7 @@ def make_appointment_type(slots=None, **kwargs):
 			"appointment_duration": 60,
 			"number_of_agents": 1,
 			"advance_booking_days": 0,
-		}
+		},
 	)
 	appointment_type.update(kwargs)
 	appointment_type.set("availability_of_slots", slots or [])

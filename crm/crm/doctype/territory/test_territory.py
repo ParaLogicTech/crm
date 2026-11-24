@@ -57,7 +57,7 @@ def make_territory(**kwargs):
 			"doctype": "Territory",
 			"territory_name": "_Test Territory " + frappe.generate_hash(length=8),
 			"parent_territory": "All Territories",
-		}
+		},
 	)
 	territory.update(kwargs)
 	territory.insert()

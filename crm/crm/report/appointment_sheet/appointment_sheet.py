@@ -3,9 +3,14 @@
 
 import frappe
 from frappe import _
-from frappe.utils import getdate, nowdate, format_time, format_datetime, now_datetime
-from crm.crm.doctype.appointment.appointment import get_appointments_for_reminder_notification,\
-	get_appointment_reminders_scheduled_time, get_reminder_date_from_appointment_date, automated_reminder_enabled
+from frappe.utils import format_datetime, format_time, getdate, now_datetime, nowdate
+
+from crm.crm.doctype.appointment.appointment import (
+	automated_reminder_enabled,
+	get_appointment_reminders_scheduled_time,
+	get_appointments_for_reminder_notification,
+	get_reminder_date_from_appointment_date,
+)
 
 
 class AppointmentSheetReport:
@@ -51,7 +56,7 @@ class AppointmentSheetReport:
 			"a.appointment_for", "a.party_name", "a.customer_name",
 			"a.contact_display", "a.contact_mobile", "a.contact_phone", "a.contact_email",
 			"a.applies_to_variant_of", "a.applies_to_variant_of_name", "a.applies_to_item", "a.applies_to_item_name",
-			"max(n.last_sent_dt) as last_sent_dt", "a.confirmation_dt", "a.status", "a.owner"
+			"max(n.last_sent_dt) as last_sent_dt", "a.confirmation_dt", "a.status", "a.owner",
 		]
 
 	def get_project_data(self):
@@ -140,27 +145,27 @@ class AppointmentSheetReport:
 
 	def get_columns(self):
 		columns = [
-			{'label': _("Appointment"), 'fieldname': 'appointment', 'fieldtype': 'Link', 'options': 'Appointment', 'width': 100},
-			{'label': _("Date"), 'fieldname': 'scheduled_date', 'fieldtype': 'Date', 'width': 80},
-			{'label': _("Time"), 'fieldname': 'scheduled_time_fmt', 'fieldtype': 'Data', 'width': 70},
-			{'label': _("Party"), 'fieldname': 'party_name', 'fieldtype': 'Dynamic Link', 'options': 'appointment_for', 'width': 80},
-			{'label': _("Customer Name"), 'fieldname': 'customer_name', 'fieldtype': 'Data', 'width': 150},
-			{'label': _("Contact #"), 'fieldname': 'contact_number', 'fieldtype': 'Data', 'width': 100},
+			{"label": _("Appointment"), "fieldname": "appointment", "fieldtype": "Link", "options": "Appointment", "width": 100},
+			{"label": _("Date"), "fieldname": "scheduled_date", "fieldtype": "Date", "width": 80},
+			{"label": _("Time"), "fieldname": "scheduled_time_fmt", "fieldtype": "Data", "width": 70},
+			{"label": _("Party"), "fieldname": "party_name", "fieldtype": "Dynamic Link", "options": "appointment_for", "width": 80},
+			{"label": _("Customer Name"), "fieldname": "customer_name", "fieldtype": "Data", "width": 150},
+			{"label": _("Contact #"), "fieldname": "contact_number", "fieldtype": "Data", "width": 100},
 			{"label": _("Item"), "fieldname": "applies_to_variant_of_name", "fieldtype": "Data", "width": 120},
 			{"label": _("Item Code"), "fieldname": "applies_to_item", "fieldtype": "Link", "options": "Item", "width": 120},
 		]
 
 		columns += [
 			{"label": _("Voice of Customer"), "fieldname": "voice_of_customer", "fieldtype": "Data", "width": 200},
-			{'label': _("Status"), 'fieldname': 'status', 'fieldtype': 'Data', 'width': 80},
-			{'label': _("Service Advisor"), 'fieldname': 'service_advisor', 'fieldtype': 'Link', 'options': "Sales Person", 'width': 110},
+			{"label": _("Status"), "fieldname": "status", "fieldtype": "Data", "width": 80},
+			{"label": _("Service Advisor"), "fieldname": "service_advisor", "fieldtype": "Link", "options": "Sales Person", "width": 110},
 			{"label": _("Remarks"), "fieldname": "remarks", "fieldtype": "Data", "width": 200, "editable": 1},
-			{'label': _("Project"), 'fieldname': 'project', 'fieldtype': 'Link', 'width': 100, 'options': 'Project'},
-			{'label': _("Project Type"), 'fieldname': 'project_type', 'fieldtype': 'Link', 'width': 100, 'options': 'Project Type'},
-			{'label': _("Source"), 'fieldname': 'appointment_source', 'fieldtype': 'Data', 'width': 100},
+			{"label": _("Project"), "fieldname": "project", "fieldtype": "Link", "width": 100, "options": "Project"},
+			{"label": _("Project Type"), "fieldname": "project_type", "fieldtype": "Link", "width": 100, "options": "Project Type"},
+			{"label": _("Source"), "fieldname": "appointment_source", "fieldtype": "Data", "width": 100},
 			{"label": _("Reminder"), "fieldname": "reminder", "fieldtype": "Data", "width": 200},
 			{"label": _("Confirmation Time"), "fieldname": "confirmation_dt_fmt", "fieldtype": "Data", "width": 140},
-			{'label': _("Created By"), 'fieldname': 'owner', 'fieldtype': 'Link', "options": "User", "width": 150},
+			{"label": _("Created By"), "fieldname": "owner", "fieldtype": "Link", "options": "User", "width": 150},
 		]
 
 		if not self.filters.has_project_type:

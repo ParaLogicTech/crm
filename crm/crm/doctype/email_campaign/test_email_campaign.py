@@ -86,7 +86,7 @@ class TestEmailCampaign(CRMTestCase):
 				"email": "unsubscribe@example.com",
 				"reference_doctype": "Email Campaign",
 				"reference_name": email_campaign.name,
-			}
+			},
 		).insert(ignore_permissions=True)
 
 		self.assertEqual(frappe.db.get_value("Email Campaign", email_campaign.name, "status"), "Unsubscribed")
@@ -105,14 +105,14 @@ class TestEmailCampaignSending(CRMTestCase):
 		lead = make_lead(lead_name="Campaign Lead", email_id="campaign.lead@example.com")
 		started_today = make_email_campaign(campaign=campaign, recipient=lead.name)
 		started_2_days_ago = make_email_campaign(
-			campaign=campaign, recipient=make_lead(email_id="early@example.com").name
+			campaign=campaign, recipient=make_lead(email_id="early@example.com").name,
 		)
 		started_2_days_ago.db_set("start_date", add_days(nowdate(), -2))
 
 		send_email_to_leads_or_contacts()
 
 		self.assertEqual(
-			get_sent_emails(started_today.name), [("Welcome Campaign Lead", "campaign.lead@example.com")]
+			get_sent_emails(started_today.name), [("Welcome Campaign Lead", "campaign.lead@example.com")],
 		)
 		self.assertEqual(
 			[subject.split(",")[0] for subject, recipient in get_sent_emails(started_2_days_ago.name)],
@@ -130,7 +130,7 @@ class TestEmailCampaignSending(CRMTestCase):
 
 		self.assertEqual(frappe.db.get_value("Email Campaign", email_campaign.name, "status"), "In Progress")
 		self.assertEqual(
-			[subject for subject, recipient in get_sent_emails(email_campaign.name)], ["Day one"]
+			[subject for subject, recipient in get_sent_emails(email_campaign.name)], ["Day one"],
 		)
 
 	def test_no_emails_for_inactive_campaigns(self):
@@ -150,12 +150,12 @@ class TestEmailCampaignSending(CRMTestCase):
 				"doctype": "Contact",
 				"first_name": "Campaign Contact",
 				"email_ids": [{"email_id": "campaign.contact@example.com", "is_primary": 1}],
-			}
+			},
 		).insert()
 		campaign = make_campaign(schedule=[(0, make_email_template(subject="Hello {{ doc.first_name }}"))])
 
 		email_campaign = make_email_campaign(
-			campaign=campaign, email_campaign_for="Contact", recipient=contact.name
+			campaign=campaign, email_campaign_for="Contact", recipient=contact.name,
 		)
 		send_email_to_leads_or_contacts()
 
@@ -173,7 +173,7 @@ def make_email_template(subject="_Test Campaign Email", response="Hello {{ doc.n
 				"name": "_Test Email Template " + frappe.generate_hash(length=8),
 				"subject": subject,
 				"response": response,
-			}
+			},
 		)
 		.insert()
 		.name
@@ -192,7 +192,7 @@ def make_campaign(schedule=None):
 				"campaign_schedules": [
 					{"send_after_days": days, "email_template": template} for days, template in schedule
 				],
-			}
+			},
 		)
 		.insert()
 		.name
@@ -207,7 +207,7 @@ def make_email_campaign(campaign=None, recipient=None, start_date=None, **kwargs
 			"email_campaign_for": "Lead",
 			"start_date": start_date or nowdate(),
 			"sender": "Administrator",
-		}
+		},
 	)
 	email_campaign.update(kwargs)
 	email_campaign.recipient = (
@@ -227,7 +227,7 @@ def make_outgoing_email_account():
 			"default_outgoing": 1,
 			"smtp_server": "smtp.example.com",
 			"no_smtp_authentication": 1,
-		}
+		},
 	).insert(ignore_if_duplicate=True)
 
 

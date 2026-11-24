@@ -8,7 +8,7 @@ crm.CustomerFeedback = class CustomerFeedback extends frappe.ui.form.Controller 
 		this.setup_queries();
 	}
 
-	refresh () {
+	refresh() {
 		this.set_feedback_from();
 		this.set_sales_person_from_user();
 		this.update_dynamic_fields();
@@ -18,29 +18,29 @@ crm.CustomerFeedback = class CustomerFeedback extends frappe.ui.form.Controller 
 	setup_queries() {
 		let me = this;
 
-		me.frm.set_query('contact_person', frappe.contacts.contact_query);
+		me.frm.set_query("contact_person", frappe.contacts.contact_query);
 
 		me.frm.set_query("feedback_from", () => {
 			return {
 				"filters": {
 					"name": ["in", crm.utils.get_feedback_allowed_party_types()],
-				}
-			}
-		});
-
-		me.frm.set_query('feedback_sub_type', () => {
-			return {
-				filters: {
-					feedback_type: this.frm.doc.feedback_type
-				}
+				},
 			};
 		});
 
-		me.frm.set_query('feedback_status', () => {
+		me.frm.set_query("feedback_sub_type", () => {
 			return {
 				filters: {
-					feedback_type: ['in', [this.frm.doc.feedback_type, '']]
-				}
+					feedback_type: this.frm.doc.feedback_type,
+				},
+			};
+		});
+
+		me.frm.set_query("feedback_status", () => {
+			return {
+				filters: {
+					feedback_type: ["in", [this.frm.doc.feedback_type, ""]],
+				},
 			};
 		});
 	}
@@ -53,7 +53,7 @@ crm.CustomerFeedback = class CustomerFeedback extends frappe.ui.form.Controller 
 		}
 	}
 
-	feedback_from () {
+	feedback_from() {
 		this.set_dynamic_link();
 		this.update_dynamic_fields();
 		this.frm.set_value("party_name", "");
@@ -82,9 +82,9 @@ crm.CustomerFeedback = class CustomerFeedback extends frappe.ui.form.Controller 
 	set_dynamic_link() {
 		frappe.dynamic_link = {
 			doc: this.frm.doc,
-			fieldname: 'party_name',
-			doctype: this.frm.doc.feedback_from || "Lead"
-		}
+			fieldname: "party_name",
+			doctype: this.frm.doc.feedback_from || "Lead",
+		};
 	}
 
 	get_customer_details() {
@@ -97,17 +97,17 @@ crm.CustomerFeedback = class CustomerFeedback extends frappe.ui.form.Controller 
 						feedback_from: this.frm.doc.feedback_from,
 						party_name: this.frm.doc.party_name,
 						project: this.frm.doc.project,
-					}
+					},
 				},
 				callback: (r) => {
 					if (r.message && !r.exc) {
 						for (let key in r.message) {
-							if (r.message.hasOwnProperty(key) && this.frm.fields_dict[key]) {
+							if (Object.hasOwn(r.message, key) && this.frm.fields_dict[key]) {
 								this.frm.set_value(key, r.message[key]);
 							}
 						}
 					}
-				}
+				},
 			});
 		}
 	}
@@ -116,7 +116,7 @@ crm.CustomerFeedback = class CustomerFeedback extends frappe.ui.form.Controller 
 		this.frm.set_value("reference_name", null);
 	}
 
-	reference_name () {
+	reference_name() {
 		return this.determine_party();
 	}
 
@@ -127,29 +127,29 @@ crm.CustomerFeedback = class CustomerFeedback extends frappe.ui.form.Controller 
 				doc: this.frm.doc,
 				callback: () => {
 					this.frm.refresh_fields();
-				}
+				},
 			});
 		}
 	}
 
 	feedback_type() {
 		if (this.frm.doc.feedback_type) {
-			this.frm.set_value('feedback_sub_type', null);
-			this.frm.set_value('feedback_status', null);
+			this.frm.set_value("feedback_sub_type", null);
+			this.frm.set_value("feedback_status", null);
 		}
 	}
 
 	set_sales_person_from_user() {
-		if (!this.frm.get_field('sales_person') || this.frm.doc.sales_person || !this.frm.doc.__islocal) {
+		if (!this.frm.get_field("sales_person") || this.frm.doc.sales_person || !this.frm.doc.__islocal) {
 			return;
 		}
 
 		crm.utils.get_sales_person_from_user(sales_person => {
 			if (sales_person) {
-				this.frm.set_value('sales_person', sales_person);
+				this.frm.set_value("sales_person", sales_person);
 			}
 		});
 	}
-}
+};
 
 extend_cscript(cur_frm.cscript, new crm.CustomerFeedback({frm: cur_frm}));

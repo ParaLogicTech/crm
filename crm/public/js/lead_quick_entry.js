@@ -1,13 +1,13 @@
-frappe.provide('frappe.ui.form');
+frappe.provide("frappe.ui.form");
 
 frappe.ui.form.LeadQuickEntryForm = class LeadQuickEntryForm extends frappe.ui.form.QuickEntryForm {
-	skip_redirect_on_error = true
+	skip_redirect_on_error = true;
 
 	render_dialog() {
 		let additional_fields = this.get_lead_fields();
 		let additional_fieldnames = additional_fields.map(f => f.fieldname);
 		this.mandatory = this.mandatory.filter(f => !additional_fieldnames.includes(f.fieldname));
-		this.mandatory = this.mandatory.filter(d => d.fieldname != 'status');
+		this.mandatory = this.mandatory.filter(d => d.fieldname != "status");
 		this.mandatory = this.mandatory.concat(additional_fields);
 		super.render_dialog();
 		this.setup_events();
@@ -19,63 +19,63 @@ frappe.ui.form.LeadQuickEntryForm = class LeadQuickEntryForm extends frappe.ui.f
 
 		if (me.dialog.fields_dict["tax_id"]) {
 			me.dialog.fields_dict["tax_id"].df.onchange = () => {
-				var value = me.dialog.get_value('tax_id');
+				var value = me.dialog.get_value("tax_id");
 				value = frappe.regional.get_formatted_tax_id(value);
 				me.dialog.doc.tax_id = value;
-				me.dialog.get_field('tax_id').refresh();
+				me.dialog.get_field("tax_id").refresh();
 				frappe.regional.validate_duplicate_tax_id(me.dialog.doc, "tax_id");
 			};
 		}
 
 		if (me.dialog.fields_dict["tax_cnic"]) {
 			me.dialog.fields_dict["tax_cnic"].df.onchange = () => {
-				var value = me.dialog.get_value('tax_cnic');
+				var value = me.dialog.get_value("tax_cnic");
 				value = frappe.regional.get_formatted_cnic(value);
 				me.dialog.doc.tax_cnic = value;
-				me.dialog.get_field('tax_cnic').refresh();
+				me.dialog.get_field("tax_cnic").refresh();
 				frappe.regional.validate_duplicate_tax_id(me.dialog.doc, "tax_cnic");
 			};
 		}
 
 		if (me.dialog.fields_dict["tax_strn"]) {
 			me.dialog.fields_dict["tax_strn"].df.onchange = () => {
-				var value = me.dialog.get_value('tax_strn');
+				var value = me.dialog.get_value("tax_strn");
 				value = frappe.regional.get_formatted_strn(value);
 				me.dialog.doc.tax_strn = value;
-				me.dialog.get_field('tax_strn').refresh();
+				me.dialog.get_field("tax_strn").refresh();
 				frappe.regional.validate_duplicate_tax_id(me.dialog.doc, "tax_strn");
 			};
 		}
 
 		if (me.dialog.fields_dict["mobile_no"]) {
 			me.dialog.fields_dict["mobile_no"].df.onchange = () => {
-				var value = me.dialog.get_value('mobile_no');
+				var value = me.dialog.get_value("mobile_no");
 				value = frappe.regional.get_formatted_mobile_no(value);
 				me.dialog.doc.mobile_no = value;
-				me.dialog.get_field('mobile_no').refresh();
+				me.dialog.get_field("mobile_no").refresh();
 			};
 		}
 
 		if (me.dialog.fields_dict["mobile_no_2"]) {
 			me.dialog.fields_dict["mobile_no_2"].df.onchange = () => {
-				var value = me.dialog.get_value('mobile_no_2');
+				var value = me.dialog.get_value("mobile_no_2");
 				value = frappe.regional.get_formatted_mobile_no(value);
 				me.dialog.doc.mobile_no_2 = value;
-				me.dialog.get_field('mobile_no_2').refresh();
+				me.dialog.get_field("mobile_no_2").refresh();
 			};
 		}
 	}
 
 	set_sales_person_from_user() {
 		var me = this;
-		if (!me.dialog.get_field('sales_person') || me.dialog.doc.sales_person || !me.dialog.doc.__islocal) {
+		if (!me.dialog.get_field("sales_person") || me.dialog.doc.sales_person || !me.dialog.doc.__islocal) {
 			return;
 		}
 
 		crm.utils.get_sales_person_from_user(sales_person => {
 			if (sales_person) {
 				me.dialog.doc.sales_person = sales_person;
-				me.dialog.get_field('sales_person').refresh();
+				me.dialog.get_field("sales_person").refresh();
 			}
 		});
 	}
@@ -90,25 +90,25 @@ frappe.ui.form.LeadQuickEntryForm = class LeadQuickEntryForm extends frappe.ui.f
 				label: __("Lead Source"),
 				fieldname: "source",
 				fieldtype: "Link",
-				options: "Lead Source"
+				options: "Lead Source",
 			},
 			{
-				fieldtype: "Column Break"
+				fieldtype: "Column Break",
 			},
 			{
 				label: __("Territory"),
 				fieldname: "territory",
 				fieldtype: "Link",
-				options: "Territory"
+				options: "Territory",
 			},
 			{
-				fieldtype: "Column Break"
+				fieldtype: "Column Break",
 			},
 			{
 				label: __("Sales Person"),
 				fieldname: "sales_person",
 				fieldtype: "Link",
-				options: "Sales Person"
+				options: "Sales Person",
 			},
 			{
 				fieldtype: "Section Break",
@@ -117,31 +117,31 @@ frappe.ui.form.LeadQuickEntryForm = class LeadQuickEntryForm extends frappe.ui.f
 			{
 				label: __("Mobile Number (Primary)"),
 				fieldname: "mobile_no",
-				fieldtype: "Data"
+				fieldtype: "Data",
 			},
 			{
-				fieldtype: "Column Break"
+				fieldtype: "Column Break",
 			},
 			{
 				label: __("Mobile Number (Secondary"),
 				fieldname: "mobile_no_2",
-				fieldtype: "Data"
+				fieldtype: "Data",
 			},
 			{
-				fieldtype: "Column Break"
+				fieldtype: "Column Break",
 			},
 			{
 				label: __("Phone Number"),
 				fieldname: "phone_no",
-				fieldtype: "Data"
+				fieldtype: "Data",
 			},
 			{
-				fieldtype: "Column Break"
+				fieldtype: "Column Break",
 			},
 			{
 				label: __("Email Id"),
 				fieldname: "email_id",
-				fieldtype: "Data"
+				fieldtype: "Data",
 			},
 
 			{
@@ -151,31 +151,31 @@ frappe.ui.form.LeadQuickEntryForm = class LeadQuickEntryForm extends frappe.ui.f
 			{
 				label: __("Address Line 1"),
 				fieldname: "address_line1",
-				fieldtype: "Data"
+				fieldtype: "Data",
 			},
 			{
 				label: __("Address Line 2"),
 				fieldname: "address_line2",
-				fieldtype: "Data"
+				fieldtype: "Data",
 			},
 			{
-				fieldtype: "Column Break"
+				fieldtype: "Column Break",
 			},
 			{
 				label: __("City"),
 				fieldname: "city",
-				fieldtype: "Data"
+				fieldtype: "Data",
 			},
 			{
 				label: __("State"),
 				fieldname: "state",
-				fieldtype: "Data"
+				fieldtype: "Data",
 			},
 			{
 				label: __("Country"),
 				fieldname: "country",
 				fieldtype: "Link",
-				options: "Country"
+				options: "Country",
 			},
 
 			{
@@ -185,23 +185,23 @@ frappe.ui.form.LeadQuickEntryForm = class LeadQuickEntryForm extends frappe.ui.f
 			{
 				label: __("CNIC"),
 				fieldname: "tax_cnic",
-				fieldtype: "Data"
+				fieldtype: "Data",
 			},
 			{
-				fieldtype: "Column Break"
+				fieldtype: "Column Break",
 			},
 			{
 				label: __("Tax Id"),
 				fieldname: "tax_id",
-				fieldtype: "Data"
+				fieldtype: "Data",
 			},
 			{
-				fieldtype: "Column Break"
+				fieldtype: "Column Break",
 			},
 			{
 				label: __("STRN"),
 				fieldname: "tax_strn",
-				fieldtype: "Data"
+				fieldtype: "Data",
 			},
 		];
 	}

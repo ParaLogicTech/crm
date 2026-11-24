@@ -1,3 +1,3 @@
-frappe.ui.form.on('Appointment Booking Settings', {
+frappe.ui.form.on("Appointment Booking Settings", {
 
 });

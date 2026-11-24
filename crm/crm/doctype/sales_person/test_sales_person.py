@@ -73,7 +73,7 @@ class TestSalesPerson(CRMTestCase):
 	def test_user_without_sales_person(self):
 		user = make_user()
 		self.assertEqual(
-			get_advisor_sales_person_from_user(user), {"sales_person": None, "is_service_advisor": 0}
+			get_advisor_sales_person_from_user(user), {"sales_person": None, "is_service_advisor": 0},
 		)
 		self.assertIsNone(get_service_advisor_from_user(user))
 
@@ -103,7 +103,7 @@ def make_sales_person(**kwargs):
 			"sales_person_name": "_Test Sales Person " + frappe.generate_hash(length=8),
 			"parent_sales_person": "Sales Team",
 			"is_service_advisor": 1,
-		}
+		},
 	)
 	sales_person.update(kwargs)
 	sales_person.insert()
@@ -117,7 +117,7 @@ def make_user():
 			"email": f"_test_sales_person_{frappe.generate_hash(length=8)}@example.com",
 			"first_name": "_Test Sales Person User",
 			"send_welcome_email": 0,
-		}
+		},
 	)
 	user.insert()
 	return user.name

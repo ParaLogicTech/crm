@@ -33,11 +33,11 @@ crm.QuickContacts = class QuickContacts extends frappe.ui.form.Controller {
 					lead: lead,
 					get_contact_no_list: 1,
 					link_doctype: frappe.dynamic_link.doctype,
-					link_name: me.frm.doc[frappe.dynamic_link.fieldname]
+					link_name: me.frm.doc[frappe.dynamic_link.fieldname],
 				},
-				callback: function (r) {
+				callback: function(r) {
 					if (r.message) {
-						$.each(r.message || {}, function (k, v) {
+						$.each(r.message || {}, function(k, v) {
 							var key_item = `${prefix}${k}`;
 							if (me.frm.get_field(key_item)) {
 								me.frm.doc[key_item] = v;
@@ -46,7 +46,7 @@ crm.QuickContacts = class QuickContacts extends frappe.ui.form.Controller {
 						});
 						me.setup_contact_no_fields(r.message.contact_nos);
 					}
-				}
+				},
 			});
 		} else {
 			me.frm.set_value(display_fieldname, "");
@@ -68,7 +68,7 @@ crm.QuickContacts = class QuickContacts extends frappe.ui.form.Controller {
 		let mobile_field = prefix + "contact_mobile";
 		let contact_field = prefix + "contact_person";
 
-		if (this.add_new_contact_number("contact_mobile", 'is_primary_mobile_no', prefix)) {
+		if (this.add_new_contact_number("contact_mobile", "is_primary_mobile_no", prefix)) {
 			return;
 		}
 
@@ -91,8 +91,8 @@ crm.QuickContacts = class QuickContacts extends frappe.ui.form.Controller {
 
 		tasks.push(() => {
 			if (this.frm.doc.contact_mobile_2 == this.frm.doc.contact_mobile) {
-				this.frm.doc.contact_mobile_2 = '';
-				this.frm.refresh_field('contact_mobile_2');
+				this.frm.doc.contact_mobile_2 = "";
+				this.frm.refresh_field("contact_mobile_2");
 			}
 		});
 
@@ -101,11 +101,11 @@ crm.QuickContacts = class QuickContacts extends frappe.ui.form.Controller {
 
 
 	contact_mobile_2() {
-		this.add_new_contact_number('contact_mobile_2', 'is_primary_mobile_no');
+		this.add_new_contact_number("contact_mobile_2", "is_primary_mobile_no");
 	}
 
 	contact_phone() {
-		this.add_new_contact_number('contact_phone', 'is_primary_phone');
+		this.add_new_contact_number("contact_phone", "is_primary_phone");
 	}
 
 	add_new_contact_number(number_field, number_type, prefix) {
@@ -124,9 +124,9 @@ crm.QuickContacts = class QuickContacts extends frappe.ui.form.Controller {
 				(phone) => {
 					return frappe.run_serially([
 						() => this.get_all_contact_nos(),
-						() => this.frm.set_value(mobile_field, phone)
+						() => this.frm.set_value(mobile_field, phone),
 					]);
-				}
+				},
 			);
 
 			this.frm.doc[mobile_field] = "";
@@ -143,11 +143,11 @@ crm.QuickContacts = class QuickContacts extends frappe.ui.form.Controller {
 			frappe.contacts.set_all_contact_nos(this.frm, contact_nos);
 		}
 
-		frappe.contacts.set_contact_no_select_options(this.frm, 'contact_mobile', 'is_primary_mobile_no', true);
-		frappe.contacts.set_contact_no_select_options(this.frm, 'contact_mobile_2', 'is_primary_mobile_no', true);
-		frappe.contacts.set_contact_no_select_options(this.frm, 'contact_phone', 'is_primary_phone', true);
+		frappe.contacts.set_contact_no_select_options(this.frm, "contact_mobile", "is_primary_mobile_no", true);
+		frappe.contacts.set_contact_no_select_options(this.frm, "contact_mobile_2", "is_primary_mobile_no", true);
+		frappe.contacts.set_contact_no_select_options(this.frm, "contact_phone", "is_primary_phone", true);
 
-		frappe.contacts.set_contact_no_select_options(this.frm, 'secondary_contact_mobile', 'is_primary_mobile_no', true);
+		frappe.contacts.set_contact_no_select_options(this.frm, "secondary_contact_mobile", "is_primary_mobile_no", true);
 	}
 
 	get_all_contact_nos() {
@@ -155,7 +155,7 @@ crm.QuickContacts = class QuickContacts extends frappe.ui.form.Controller {
 		return frappe.run_serially([
 			() => frappe.contacts.get_all_contact_nos(this.frm, frappe.dynamic_link.doctype,
 				this.frm.doc[frappe.dynamic_link.fieldname]),
-			() => this.setup_contact_no_fields()
+			() => this.setup_contact_no_fields(),
 		]);
 	}
 };

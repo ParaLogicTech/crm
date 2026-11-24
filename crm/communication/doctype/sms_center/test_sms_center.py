@@ -28,7 +28,7 @@ class TestSMSCenterReceivers(CRMTestCase):
 		self.assertIn("_Test SMS Zara | 03001110001", receivers)
 		self.assertIn("_Test SMS Adil | 03001110002", receivers)
 		self.assertLess(
-			receivers.index("_Test SMS Adil | 03001110002"), receivers.index("_Test SMS Zara | 03001110001")
+			receivers.index("_Test SMS Adil | 03001110002"), receivers.index("_Test SMS Zara | 03001110001"),
 		)
 		self.assertFalse([r for r in receivers if r.startswith(without_mobile.full_name)])
 		self.assertEqual(sms_center.total_receivers, len(receivers))
@@ -45,7 +45,7 @@ class TestSMSCenterReceivers(CRMTestCase):
 		open_lead = make_lead(lead_name="_Test SMS Open Lead", mobile_no="03001110004")
 		make_lead(lead_name="_Test SMS Lead Without Mobile")
 		lead_with_opportunity = make_lead(
-			lead_name="_Test SMS Lead With Opportunity", mobile_no="03001110005"
+			lead_name="_Test SMS Lead With Opportunity", mobile_no="03001110005",
 		)
 		make_opportunity(party_name=lead_with_opportunity.name)
 
@@ -157,7 +157,7 @@ def get_receiver_list(send_to, **kwargs):
 def get_sms_center(**kwargs):
 	sms_center = frappe.get_doc("SMS Center")
 	sms_center.update(
-		{"message": "Hello", "receiver_list": "_Test | 03001110012", "send_after": None, **kwargs}
+		{"message": "Hello", "receiver_list": "_Test | 03001110012", "send_after": None, **kwargs},
 	)
 	return sms_center
 

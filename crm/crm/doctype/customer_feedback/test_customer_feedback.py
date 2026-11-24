@@ -145,7 +145,7 @@ class TestSubmitCustomerFeedback(CRMTestCase):
 		opportunity = make_opportunity()
 
 		out = submit_customer_feedback(
-			"Opportunity", opportunity.name, "Remark", "Customer asked to call later"
+			"Opportunity", opportunity.name, "Remark", "Customer asked to call later",
 		)
 		self.assertEqual(out["contact_remarks"], "Customer asked to call later")
 		self.assertIsNone(out["customer_feedback"])
@@ -178,7 +178,7 @@ class TestSubmitCustomerFeedback(CRMTestCase):
 	def test_empty_message(self):
 		opportunity = make_opportunity()
 		self.assertRaises(
-			frappe.ValidationError, submit_customer_feedback, "Opportunity", opportunity.name, "Feedback", ""
+			frappe.ValidationError, submit_customer_feedback, "Opportunity", opportunity.name, "Feedback", "",
 		)
 
 	def test_missing_reference(self):
@@ -193,7 +193,7 @@ class TestSubmitCustomerFeedback(CRMTestCase):
 
 	def test_reference_without_party(self):
 		campaign = frappe.get_doc({"doctype": "Campaign", "campaign_name": "_Test Feedback Campaign"}).insert(
-			ignore_if_duplicate=True
+			ignore_if_duplicate=True,
 		)
 		self.assertRaisesRegex(
 			frappe.ValidationError,
@@ -224,7 +224,7 @@ def make_feedback_type(**kwargs):
 				"doctype": "Feedback Type",
 				"feedback_type": "_Test Feedback Type " + frappe.generate_hash(length=8),
 				**kwargs,
-			}
+			},
 		)
 		.insert()
 		.name
@@ -238,7 +238,7 @@ def make_feedback_sub_type(feedback_type):
 				"doctype": "Feedback Sub Type",
 				"feedback_sub_type": "_Test Feedback Sub Type " + frappe.generate_hash(length=8),
 				"feedback_type": feedback_type,
-			}
+			},
 		)
 		.insert()
 		.name
@@ -252,7 +252,7 @@ def make_feedback_status(feedback_type):
 				"doctype": "Feedback Status",
 				"feedback_status": "_Test Feedback Status " + frappe.generate_hash(length=8),
 				"feedback_type": feedback_type,
-			}
+			},
 		)
 		.insert()
 		.name
@@ -265,7 +265,7 @@ def make_feedback_source():
 			{
 				"doctype": "Feedback Source",
 				"feedback_source": "_Test Feedback Source " + frappe.generate_hash(length=8),
-			}
+			},
 		)
 		.insert()
 		.name

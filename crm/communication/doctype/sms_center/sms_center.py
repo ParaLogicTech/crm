@@ -3,9 +3,9 @@
 
 import frappe
 from frappe import _
-from frappe.utils import cstr, cint, get_datetime, now_datetime
+from frappe.core.doctype.sms_settings.sms_settings import clean_receiver_number, send_sms
 from frappe.model.document import Document
-from frappe.core.doctype.sms_settings.sms_settings import send_sms, clean_receiver_number
+from frappe.utils import cint, cstr, get_datetime, now_datetime
 
 # Receivers that come from ERPNext DocTypes, which a site with only crm doesn't have
 erpnext_send_to_doctypes = {
@@ -23,7 +23,7 @@ class SMSCenter(Document):
 
 		receivers = []
 
-		if self.send_to in ['All Contact', 'All Customer Contact', 'All Supplier Contact', 'All Sales Partner Contact']:
+		if self.send_to in ["All Contact", "All Customer Contact", "All Supplier Contact", "All Sales Partner Contact"]:
 			self.is_promotional = 1
 
 			conditions = []
@@ -33,11 +33,11 @@ class SMSCenter(Document):
 				conditions.append("dl.link_doctype = 'Customer'")
 				if self.customer:
 					conditions.append("dl.link_name = {0}".format(frappe.db.escape(self.customer)))
-			elif self.send_to == 'All Supplier Contact':
+			elif self.send_to == "All Supplier Contact":
 				conditions.append("dl.link_doctype = 'Supplier'")
 				if self.supplier:
 					conditions.append("dl.link_name = {0}".format(frappe.db.escape(self.supplier)))
-			elif self.send_to == 'All Sales Partner Contact':
+			elif self.send_to == "All Sales Partner Contact":
 				conditions.append("dl.link_doctype = 'Sales Partner'")
 				if self.sales_partner:
 					conditions.append("dl.link_name = {0}".format(frappe.db.escape(self.sales_partner)))
@@ -53,7 +53,7 @@ class SMSCenter(Document):
 				order by c.full_name
 			""".format(join, conditions))
 
-		elif self.send_to == 'All Lead (Open)':
+		elif self.send_to == "All Lead (Open)":
 			self.is_promotional = 1
 
 			receivers = frappe.db.sql("""
@@ -63,7 +63,7 @@ class SMSCenter(Document):
 				order by lead_name
 			""")
 
-		elif self.send_to == 'All Employee (Active)':
+		elif self.send_to == "All Employee (Active)":
 			conditions = []
 			if self.department:
 				conditions.append("department = {0}".format(frappe.db.escape(self.department)))
@@ -79,7 +79,7 @@ class SMSCenter(Document):
 				order by employee_name
 			""".format(conditions))
 
-		elif self.send_to == 'All Sales Person':
+		elif self.send_to == "All Sales Person":
 			receivers = frappe.db.sql("""
 				select sp.name, sp.contact_mobile
 				from `tabSales Person` sp
@@ -112,16 +112,16 @@ class SMSCenter(Document):
 			return
 
 		frappe.throw(_("Cannot create a receiver list for {0} because {1} is not installed").format(
-			frappe.bold(_(self.send_to)), _(doctype)
+			frappe.bold(_(self.send_to)), _(doctype),
 		))
 
 	def get_receiver_nos(self):
 		receiver_nos = []
 		if self.receiver_list:
-			for d in self.receiver_list.split('\n'):
+			for d in self.receiver_list.split("\n"):
 				receiver_no = cstr(d)
-				if '|' in d:
-					receiver_no = receiver_no.split('|')[-1]
+				if "|" in d:
+					receiver_no = receiver_no.split("|")[-1]
 
 				receiver_no = cstr(receiver_no).strip()
 				if receiver_no:
@@ -151,7 +151,7 @@ class SMSCenter(Document):
 			queue=queue,
 			queue_separately=True,
 			send_after=self.send_after,
-			priority=0
+			priority=0,
 		)
 
 		if queue:

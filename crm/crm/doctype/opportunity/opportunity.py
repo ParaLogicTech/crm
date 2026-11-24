@@ -1,18 +1,19 @@
 # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
 
-import frappe
-from frappe import _
-from frappe.utils import today, getdate, cint, clean_whitespace, comma_or, cstr, validate_email_address, add_days
-from frappe.model.mapper import get_mapped_doc
-from frappe.email.inbox import link_communication_to_document
-from frappe.utils.status_updater import StatusUpdater
-from frappe.model.document import Document
-from crm.crm.doctype.sales_person.sales_person import get_sales_person_from_user
-from crm.crm.utils import _get_contact_details, render_address, get_primary_address, get_primary_contact
-from frappe.rate_limiter import rate_limit
 import json
 
+import frappe
+from frappe import _
+from frappe.email.inbox import link_communication_to_document
+from frappe.model.document import Document
+from frappe.model.mapper import get_mapped_doc
+from frappe.rate_limiter import rate_limit
+from frappe.utils import add_days, cint, clean_whitespace, comma_or, cstr, getdate, today, validate_email_address
+from frappe.utils.status_updater import StatusUpdater
+
+from crm.crm.doctype.sales_person.sales_person import get_sales_person_from_user
+from crm.crm.utils import _get_contact_details, get_primary_address, get_primary_contact, render_address
 
 subject_field = "title"
 sender_field = "contact_email"
@@ -24,12 +25,12 @@ class Opportunity(StatusUpdater):
 	def __init__(self, *args, **kwargs):
 		super().__init__(*args, **kwargs)
 		self.force_party_fields = [
-			'customer_name', 'tax_id', 'tax_cnic', 'tax_strn', 'territory',
-			'address_display', 'contact_display', 'contact_email', 'contact_mobile', 'contact_phone'
+			"customer_name", "tax_id", "tax_cnic", "tax_strn", "territory",
+			"address_display", "contact_display", "contact_email", "contact_mobile", "contact_phone",
 		]
 
 	def get_feed(self):
-		return _("From {0}").format(self.get("customer_name") or self.get('party_name'))
+		return _("From {0}").format(self.get("customer_name") or self.get("party_name"))
 
 	def validate(self):
 		self.set_missing_values()
@@ -85,10 +86,10 @@ class Opportunity(StatusUpdater):
 		self.add_status_comment(previous_status)
 
 		if update:
-			self.db_set('status', self.status, update_modified=update_modified)
+			self.db_set("status", self.status, update_modified=update_modified)
 
 	def set_sales_person_from_user(self):
-		if not self.get('sales_person') and self.is_new():
+		if not self.get("sales_person") and self.is_new():
 			self.sales_person = get_sales_person_from_user()
 
 	def set_missing_values(self):
@@ -125,11 +126,11 @@ class Opportunity(StatusUpdater):
 	def validate_follow_up(self):
 		self.next_follow_up = self.get_next_follow_up_date()
 
-		for d in self.get('contact_schedule'):
-			if not d.get('contact_date') and not d.get('schedule_date'):
+		for d in self.get("contact_schedule"):
+			if not d.get("contact_date") and not d.get("schedule_date"):
 				frappe.throw(_("Row #{0}: Please set Contact or Schedule Date in follow up".format(d.idx)))
 
-			if d.is_new() and not d.get('contact_date') and getdate(d.get('schedule_date')) < getdate(today()):
+			if d.is_new() and not d.get("contact_date") and getdate(d.get("schedule_date")) < getdate(today()):
 				frappe.throw(_("Row #{0}: Can't schedule a follow up for past dates".format(d.idx)))
 
 	def get_next_follow_up_date(self):
@@ -149,7 +150,7 @@ class Opportunity(StatusUpdater):
 	def add_next_follow_up(self, schedule_date, to_discuss=None):
 		schedule_date = getdate(schedule_date)
 
-		dup = [d for d in self.get('contact_schedule') if getdate(d.get('schedule_date')) == schedule_date]
+		dup = [d for d in self.get("contact_schedule") if getdate(d.get("schedule_date")) == schedule_date]
 
 		if dup:
 			dup = dup[0]
@@ -158,10 +159,10 @@ class Opportunity(StatusUpdater):
 			else:
 				dup.to_discuss = to_discuss
 		else:
-			self.append('contact_schedule', {
-				'schedule_date': schedule_date,
-				'to_discuss': to_discuss,
-				'sales_person': get_sales_person_from_user(),
+			self.append("contact_schedule", {
+				"schedule_date": schedule_date,
+				"to_discuss": to_discuss,
+				"sales_person": get_sales_person_from_user(),
 			})
 
 	def set_follow_up_contact_date(self, contact_date):
@@ -182,17 +183,17 @@ class Opportunity(StatusUpdater):
 		if is_lost:
 			self.set_status(update=True, status="Lost")
 			self.db_set({
-				'order_lost_reason': detailed_reason,
-				'lost_date': getdate(lost_date),
+				"order_lost_reason": detailed_reason,
+				"lost_date": getdate(lost_date),
 			})
 			self.lost_reasons = []
 			for reason in lost_reasons_list:
-				self.append('lost_reasons', reason)
+				self.append("lost_reasons", reason)
 		else:
 			self.set_status(update=True, status="Open")
 			self.db_set({
-				'order_lost_reason': None,
-				'lost_date': None,
+				"order_lost_reason": None,
+				"lost_date": None,
 			})
 			self.lost_reasons = []
 
@@ -234,9 +235,9 @@ class Opportunity(StatusUpdater):
 			return False
 
 		return frappe.db.get_value("Communication", filters={
-			'reference_doctype': self.doctype,
-			'reference_name': self.name,
-			'communication_type': ['!=', 'Automated Message']
+			"reference_doctype": self.doctype,
+			"reference_name": self.name,
+			"communication_type": ["!=", "Automated Message"],
 		})
 
 	def trigger_recall_lost_opportunity(self):
@@ -268,9 +269,9 @@ def get_customer_details(args):
 		out.customer_name = party.get("customer_name")
 
 	# Tax IDs
-	out.tax_id = party.get('tax_id')
-	out.tax_cnic = party.get('tax_cnic')
-	out.tax_strn = party.get('tax_strn')
+	out.tax_id = party.get("tax_id")
+	out.tax_cnic = party.get("tax_cnic")
+	out.tax_strn = party.get("tax_strn")
 
 	lead = party if party.doctype == "Lead" else None
 
@@ -320,8 +321,8 @@ def make_appointment(source_name, target_doc=None):
 				"vehicle_last_odometer": "vehicle_last_odometer",
 				"campaign": "campaign",
 				"sales_person": "sales_person",
-			}
-		}
+			},
+		},
 	}
 
 	frappe.utils.call_hook_method("update_appointment_from_opportunity_mapper", mapper, "Appointment")
@@ -351,7 +352,7 @@ def auto_mark_opportunity_as_lost():
 	lost_reasons_list = []
 	lost_reason = frappe.db.get_single_value("CRM Settings", "opportunity_auto_lost_reason")
 	if lost_reason:
-		lost_reasons_list.append({'lost_reason': lost_reason})
+		lost_reasons_list.append({"lost_reason": lost_reason})
 
 	opportunities = frappe.db.sql_list("""
 		SELECT name
@@ -392,7 +393,7 @@ def trigger_recall_lost_opportunities():
 
 	lost_opportunities = frappe.get_all("Opportunity", filters={
 		"status": "Lost",
-		"lost_date": target_lost_date
+		"lost_date": target_lost_date,
 	}, pluck="name")
 
 	for name in lost_opportunities:
@@ -430,14 +431,14 @@ def submit_communication_with_action(remarks, action, opportunity, follow_up_dat
 	remarks = clean_whitespace(remarks)
 
 	if not opportunity:
-		frappe.throw(_('Opportunity not provided'))
+		frappe.throw(_("Opportunity not provided"))
 
 	if isinstance(opportunity, Document):
 		opp = opportunity
 	else:
-		opp = frappe.get_doc('Opportunity', opportunity)
+		opp = frappe.get_doc("Opportunity", opportunity)
 
-	if action and opp.status in ['Lost', 'Converted'] and action not in ("Submit Remarks Only", "Schedule Follow Up"):
+	if action and opp.status in ["Lost", "Converted"] and action not in ("Submit Remarks Only", "Schedule Follow Up"):
 		frappe.throw(_("Opportunity is already {0}").format(opp.status))
 
 	opp.set_follow_up_contact_date(contact_date)
@@ -468,7 +469,7 @@ def submit_communication_with_action(remarks, action, opportunity, follow_up_dat
 
 	if action == "Create Appointment":
 		appointment_doc = make_appointment(opp.name)
-		out['appointment_doc'] = appointment_doc
+		out["appointment_doc"] = appointment_doc
 
 	submit_communication(opp, contact_date, remarks, update_follow_up=False)
 
@@ -480,12 +481,12 @@ def submit_communication(opportunity, contact_date, remarks, update_follow_up=Tr
 	from frappe.model.document import Document
 
 	if not remarks:
-		frappe.throw(_('Remarks are mandatory for Communication'))
+		frappe.throw(_("Remarks are mandatory for Communication"))
 
 	remarks = clean_whitespace(remarks)
 
 	if not opportunity:
-		frappe.throw(_('Opportunity not provided'))
+		frappe.throw(_("Opportunity not provided"))
 
 	if isinstance(opportunity, Document):
 		opp = opportunity
@@ -498,7 +499,7 @@ def submit_communication(opportunity, contact_date, remarks, update_follow_up=Tr
 	comm.reference_owner = opp.owner
 
 	comm.sender = frappe.session.user
-	comm.sent_or_received = 'Received'
+	comm.sent_or_received = "Received"
 	comm.subject = "Opportunity Communication"
 	comm.content = remarks
 	comm.communication_type = "Feedback"
@@ -535,7 +536,7 @@ def get_events(start, end, filters=None):
 			{conditions}
 		""".format(conditions=conditions), {
 			"start": start,
-			"end": end
+			"end": end,
 		}, as_dict=True, update={"allDay": 1})
 
 	return data
@@ -555,7 +556,7 @@ def create_opportunity_from_communication(communication, ignore_communication_li
 	opportunity = frappe.get_doc({
 		"doctype": "Opportunity",
 		"opportunity_from": opportunity_from,
-		"party_name": lead
+		"party_name": lead,
 	}).insert(ignore_permissions=True)
 
 	link_communication_to_document(doc, "Opportunity", opportunity.name, ignore_communication_links)
@@ -575,7 +576,7 @@ def make_opportunity_from_lead_form(
 	mobile_no="",
 	phone_no="",
 	country="",
-	opportunity_args=None
+	opportunity_args=None,
 ):
 	# Forward Email Message
 	from frappe.www.contact import process_contact_message
@@ -605,12 +606,12 @@ def make_opportunity_from_lead_form(
 	default_lead_source = frappe.db.get_single_value("Contact Us Settings", "default_lead_source")
 
 	# Create/Update Lead
-	lead = frappe.db.get_value('Lead', {"email_id": sender})
+	lead = frappe.db.get_value("Lead", {"email_id": sender})
 	if not lead:
 		new_lead = frappe.new_doc("Lead")
 		new_lead.update({
 			"email_id": sender,
-			"lead_name": full_name or sender.split('@')[0].title(),
+			"lead_name": full_name or sender.split("@")[0].title(),
 			"company_name": organization,
 			"designation": designation,
 			"phone": phone_no,
@@ -628,7 +629,7 @@ def make_opportunity_from_lead_form(
 		old_lead = frappe.get_doc("Lead", lead)
 		old_lead_changed = False
 		if full_name:
-			old_lead.lead_name = full_name or sender.split('@')[0].title()
+			old_lead.lead_name = full_name or sender.split("@")[0].title()
 			old_lead_changed = True
 		if organization:
 			old_lead.company_name = organization
@@ -659,9 +660,9 @@ def make_opportunity_from_lead_form(
 			opportunity.set(k, v)
 
 	opportunity.update({
-		"opportunity_from": 'Lead',
+		"opportunity_from": "Lead",
 		"party_name": lead,
-		"status": 'Open',
+		"status": "Open",
 		"title": subject,
 		"details": message,
 		"contact_email": sender,
@@ -681,11 +682,11 @@ def make_opportunity_from_lead_form(
 		"content": message,
 		"sender": sender,
 		"sent_or_received": "Received",
-		"reference_doctype": 'Opportunity',
+		"reference_doctype": "Opportunity",
 		"reference_name": opportunity.name,
 		"timeline_links": [
-			{"link_doctype": opportunity.opportunity_from, "link_name": opportunity.party_name}
-		]
+			{"link_doctype": opportunity.opportunity_from, "link_name": opportunity.party_name},
+		],
 	})
 	comm.insert(ignore_permissions=True)
 

@@ -5,11 +5,13 @@ import frappe
 from frappe import _
 from frappe.utils import flt
 
+
 def execute(filters=None):
 	columns, data = [], []
-	columns=get_columns("Campaign Name")
-	data=get_lead_data(filters or {}, "Campaign Name")
+	columns = get_columns("Campaign Name")
+	data = get_lead_data(filters or {}, "Campaign Name")
 	return columns, data
+
 
 def get_columns(based_on):
 	return [
@@ -17,57 +19,58 @@ def get_columns(based_on):
 			"fieldname": frappe.scrub(based_on),
 			"label": _(based_on),
 			"fieldtype": "Data",
-			"width": 150
+			"width": 150,
 		},
 		{
 			"fieldname": "lead_count",
 			"label": _("Lead Count"),
 			"fieldtype": "Int",
-			"width": 80
+			"width": 80,
 		},
 		{
 			"fieldname": "opp_count",
 			"label": _("Opp Count"),
 			"fieldtype": "Int",
-			"width": 80
+			"width": 80,
 		},
 		{
 			"fieldname": "quot_count",
 			"label": _("Quot Count"),
 			"fieldtype": "Int",
-			"width": 80
+			"width": 80,
 		},
 		{
 			"fieldname": "order_count",
 			"label": _("Order Count"),
 			"fieldtype": "Int",
-			"width": 100
+			"width": 100,
 		},
 		{
 			"fieldname": "order_value",
 			"label": _("Order Value"),
 			"fieldtype": "Float",
-			"width": 100
+			"width": 100,
 		},
 		{
 			"fieldname": "opp_lead",
 			"label": _("Opp/Lead %"),
 			"fieldtype": "Float",
-			"width": 100
+			"width": 100,
 		},
 		{
 			"fieldname": "quot_lead",
 			"label": _("Quot/Lead %"),
 			"fieldtype": "Float",
-			"width": 100
+			"width": 100,
 		},
 		{
 			"fieldname": "order_quot",
 			"label": _("Order/Quot %"),
 			"fieldtype": "Float",
-			"width": 100
-		}
+			"width": 100,
+		},
 	]
+
 
 def get_lead_data(filters, based_on):
 	based_on_field = frappe.scrub(based_on)
@@ -87,9 +90,9 @@ def get_lead_data(filters, based_on):
 	for based_on_value, leads in lead_map.items():
 		row = {
 			based_on_field: based_on_value,
-			"lead_count": len(leads)
+			"lead_count": len(leads),
 		}
-		row["quot_count"]= get_lead_quotation_count(leads)
+		row["quot_count"] = get_lead_quotation_count(leads)
 		row["opp_count"] = get_lead_opp_count(leads)
 		row["order_count"] = get_quotation_ordered_count(leads)
 		row["order_value"] = get_order_amount(leads) or 0
@@ -103,8 +106,9 @@ def get_lead_data(filters, based_on):
 
 	return data
 
+
 def get_filter_conditions(filters):
-	conditions=""
+	conditions = ""
 	if filters.from_date:
 		conditions += " and date(creation) >= %(from_date)s"
 	if filters.to_date:
@@ -112,18 +116,22 @@ def get_filter_conditions(filters):
 
 	return conditions
 
+
 def get_lead_quotation_count(leads):
 	return frappe.db.sql("""select count(name) from `tabQuotation`
-		where quotation_to = 'Lead' and party_name in (%s)""" % ', '.join(["%s"]*len(leads)), tuple(leads))[0][0] #nosec
+		where quotation_to = 'Lead' and party_name in (%s)""" % ", ".join(["%s"] * len(leads)), tuple(leads))[0][0]  # nosec
+
 
 def get_lead_opp_count(leads):
 	return frappe.db.sql("""select count(name) from `tabOpportunity`
-	where opportunity_from = 'Lead' and party_name in (%s)""" % ', '.join(["%s"]*len(leads)), tuple(leads))[0][0]
+	where opportunity_from = 'Lead' and party_name in (%s)""" % ", ".join(["%s"] * len(leads)), tuple(leads))[0][0]
+
 
 def get_quotation_ordered_count(leads):
 	return frappe.db.sql("""select count(name)
 		from `tabQuotation` where status = 'Ordered' and quotation_to = 'Lead'
-		and party_name in (%s)""" % ', '.join(["%s"]*len(leads)), tuple(leads))[0][0]
+		and party_name in (%s)""" % ", ".join(["%s"] * len(leads)), tuple(leads))[0][0]
+
 
 def get_order_amount(leads):
 	return frappe.db.sql("""select sum(base_net_amount)
@@ -131,4 +139,4 @@ def get_order_amount(leads):
 		where prevdoc_docname in (
 			select name from `tabQuotation` where status = 'Ordered'
 			and quotation_to = 'Lead' and party_name in (%s)
-		)""" % ', '.join(["%s"]*len(leads)), tuple(leads))[0][0]
+		)""" % ", ".join(["%s"] * len(leads)), tuple(leads))[0][0]

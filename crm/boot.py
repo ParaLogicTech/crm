@@ -3,7 +3,7 @@ from frappe.model.base_document import get_controller
 
 
 def boot_session(bootinfo):
-	if frappe.session.user != 'Guest':
+	if frappe.session.user != "Guest":
 		if frappe.session.data.user_type == "System User":
 			update_page_info(bootinfo)
 			update_allowed_party_types(bootinfo)
@@ -13,12 +13,12 @@ def update_page_info(bootinfo):
 	bootinfo.page_info.update({
 		"Territory Tree": {
 			"title": "Territory Tree",
-			"route": "Tree/Territory"
+			"route": "Tree/Territory",
 		},
 		"Sales Person Tree": {
 			"title": "Sales Person Tree",
-			"route": "Tree/Sales Person"
-		}
+			"route": "Tree/Sales Person",
+		},
 	})
 
 

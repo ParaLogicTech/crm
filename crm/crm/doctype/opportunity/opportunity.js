@@ -42,8 +42,8 @@ crm.Opportunity = class Opportunity extends frappe.ui.form.Controller {
 						if (this.frm.doc.status == "Lost") {
 							crm.utils.update_lost_status(this.frm, false);
 						} else {
-							this.frm.set_value("lost_reasons", [])
-							this.frm.set_value("order_lost_reason", null)
+							this.frm.set_value("lost_reasons", []);
+							this.frm.set_value("order_lost_reason", null);
 							this.frm.set_value("status", "Open");
 							this.frm.save();
 						}
@@ -53,7 +53,7 @@ crm.Opportunity = class Opportunity extends frappe.ui.form.Controller {
 
 			if (this.frm.doc.status !== "Lost") {
 				if (!this.frm.doc.conversion_document || this.frm.doc.conversion_document == "Appointment") {
-					this.frm.add_custom_button(__('Appointment'), () => this.create_appointment(),
+					this.frm.add_custom_button(__("Appointment"), () => this.create_appointment(),
 						__("Create"));
 				}
 			}
@@ -71,12 +71,12 @@ crm.Opportunity = class Opportunity extends frappe.ui.form.Controller {
 			return {
 				"filters": {
 					"name": ["in", crm.utils.get_opportunity_allowed_party_types()],
-				}
-			}
+				},
+			};
 		});
 
-		me.frm.set_query('customer_address', frappe.contacts.address_query);
-		me.frm.set_query('contact_person', frappe.contacts.contact_query);
+		me.frm.set_query("customer_address", frappe.contacts.address_query);
+		me.frm.set_query("contact_person", frappe.contacts.contact_query);
 	}
 
 	set_opportunity_from() {
@@ -104,19 +104,19 @@ crm.Opportunity = class Opportunity extends frappe.ui.form.Controller {
 	set_dynamic_link() {
 		frappe.dynamic_link = {
 			doc: this.frm.doc,
-			fieldname: 'party_name',
-			doctype: this.frm.doc.opportunity_from || "Lead"
-		}
+			fieldname: "party_name",
+			doctype: this.frm.doc.opportunity_from || "Lead",
+		};
 	}
 
 	set_sales_person_from_user() {
-		if (!this.frm.get_field('sales_person') || this.frm.doc.sales_person || !this.frm.doc.__islocal) {
+		if (!this.frm.get_field("sales_person") || this.frm.doc.sales_person || !this.frm.doc.__islocal) {
 			return;
 		}
 
 		crm.utils.get_sales_person_from_user(sales_person => {
 			if (sales_person) {
-				this.frm.set_value('sales_person', sales_person);
+				this.frm.set_value("sales_person", sales_person);
 			}
 		});
 	}
@@ -128,8 +128,8 @@ crm.Opportunity = class Opportunity extends frappe.ui.form.Controller {
 	}
 
 	opportunity_type() {
-		this.setup_buttons()
-		this.update_dynamic_fields()
+		this.setup_buttons();
+		this.update_dynamic_fields();
 	}
 
 	contact_person() {
@@ -155,13 +155,13 @@ crm.Opportunity = class Opportunity extends frappe.ui.form.Controller {
 						doctype: me.frm.doc.doctype,
 						opportunity_from: me.frm.doc.opportunity_from,
 						party_name: me.frm.doc.party_name,
-					}
+					},
 				},
-				callback: function (r) {
+				callback: function(r) {
 					if (r.message && !r.exc) {
 						return me.frm.set_value(r.message);
 					}
-				}
+				},
 			});
 		}
 	}
@@ -172,7 +172,7 @@ crm.Opportunity = class Opportunity extends frappe.ui.form.Controller {
 		let prev_followup = this.frm.doc.contact_schedule.find(element => !element.contact_date);
 
 		const dialog = new frappe.ui.Dialog({
-			title: __('Submit Communication'),
+			title: __("Submit Communication"),
 			doc: {
 				prev_follow_up_remarks: prev_followup && prev_followup.to_discuss,
 				prev_follow_up_date: prev_followup && prev_followup.schedule_date,
@@ -182,28 +182,28 @@ crm.Opportunity = class Opportunity extends frappe.ui.form.Controller {
 					fieldname: "remarks",
 					fieldtype: "Small Text",
 					label: __("Remarks"),
-					reqd: 1
+					reqd: 1,
 				},
 				{
-					fieldtype: "Section Break", depends_on: "eval:doc.prev_follow_up_remarks || doc.prev_follow_up_date"
+					fieldtype: "Section Break", depends_on: "eval:doc.prev_follow_up_remarks || doc.prev_follow_up_date",
 				},
 				{
-					label : "Follow Up Remarks",
+					label: "Follow Up Remarks",
 					fieldname: "prev_follow_up_remarks",
 					fieldtype: "Small Text",
-					read_only: 1
+					read_only: 1,
 				},
 				{
-					fieldtype: "Column Break"
+					fieldtype: "Column Break",
 				},
 				{
-					label : "Follow Up Date",
+					label: "Follow Up Date",
 					fieldname: "prev_follow_up_date",
 					fieldtype: "Date",
-					read_only: 1
+					read_only: 1,
 				},
 				{
-					fieldtype: "Section Break"
+					fieldtype: "Section Break",
 				},
 				{
 					fieldname: "action",
@@ -219,37 +219,37 @@ crm.Opportunity = class Opportunity extends frappe.ui.form.Controller {
 						dialog.set_df_property("follow_up_days", "reqd", is_followup ? 1 : 0);
 
 						dialog.set_df_property("lost_reason", "reqd", is_lost ? 1 : 0);
-					}
+					},
 				},
 				{fieldtype: "Section Break", depends_on: "eval:doc.action == 'Schedule Follow Up'"},
 				{
-					label : "Follow Up in Days",
+					label: "Follow Up in Days",
 					fieldname: "follow_up_days",
 					fieldtype: "Int",
 					onchange: () => {
 						let today = frappe.datetime.nowdate();
-						let contact_date = frappe.datetime.add_days(today, dialog.get_value('follow_up_days'));
-						dialog.set_value('schedule_date', contact_date);
-					}
+						let contact_date = frappe.datetime.add_days(today, dialog.get_value("follow_up_days"));
+						dialog.set_value("schedule_date", contact_date);
+					},
 				},
 				{fieldtype: "Column Break"},
 				{
-					label : "Schedule Date",
+					label: "Schedule Date",
 					fieldname: "schedule_date",
 					fieldtype: "Date",
 					onchange: () => {
 						let today = frappe.datetime.get_today();
-						let schedule_date = dialog.get_value('schedule_date');
+						let schedule_date = dialog.get_value("schedule_date");
 						dialog.doc.follow_up_days = frappe.datetime.get_diff(schedule_date, today);
-						dialog.get_field('follow_up_days').refresh();
-					}
+						dialog.get_field("follow_up_days").refresh();
+					},
 				},
 				{fieldtype: "Section Break", depends_on: "eval:doc.action == 'Mark As Lost'"},
 				{
 					fieldtype: "Table MultiSelect",
 					label: __("Lost Reasons"),
 					fieldname: "lost_reason",
-					options: 'Lost Reason Detail',
+					options: "Lost Reason Detail",
 				},
 			],
 			primary_action: (dialog_data) => {
@@ -276,7 +276,7 @@ crm.Opportunity = class Opportunity extends frappe.ui.form.Controller {
 						}
 					},
 				});
-			}
+			},
 		});
 		dialog.show();
 	}
@@ -284,7 +284,7 @@ crm.Opportunity = class Opportunity extends frappe.ui.form.Controller {
 	create_appointment() {
 		frappe.model.open_mapped_doc({
 			method: "crm.crm.doctype.opportunity.opportunity.make_appointment",
-			frm: this.frm
+			frm: this.frm,
 		});
 	}
 
@@ -300,7 +300,7 @@ crm.Opportunity = class Opportunity extends frappe.ui.form.Controller {
 
 		crm.utils.get_sales_person_from_user(sales_person => {
 			if (sales_person) {
-				frappe.model.set_value(row.doctype, row.name, 'sales_person', sales_person);
+				frappe.model.set_value(row.doctype, row.name, "sales_person", sales_person);
 			}
 		});
 	}
