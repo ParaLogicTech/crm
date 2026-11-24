@@ -5,7 +5,7 @@ from frappe.utils import unique
 
 @frappe.whitelist()
 @frappe.validate_and_sanitize_search_inputs
-def lead_query(doctype, txt, searchfield, start, page_len, filters):
+def lead_query(doctype: str, txt: str, searchfield: str, start: int, page_len: int, filters: dict | list | None):
 	fields = get_fields("Lead", ["name", "lead_name", "company_name"])
 
 	searchfields = frappe.get_meta("Lead").get_search_fields()

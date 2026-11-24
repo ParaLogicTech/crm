@@ -13,6 +13,7 @@ from frappe.core.doctype.notification_count.notification_count import (
 	set_notification_last_scheduled,
 )
 from frappe.email.doctype.notification.notification import has_notification
+from frappe.model.document import Document
 from frappe.model.mapper import get_mapped_doc
 from frappe.model.utils import get_fetch_values
 from frappe.utils import (
@@ -657,7 +658,12 @@ class Appointment(StatusUpdater):
 
 
 @frappe.whitelist()
-def get_appointment_timeslots(scheduled_date, appointment_type, appointment=None, include_available_agents=False):
+def get_appointment_timeslots(
+	scheduled_date: str | datetime.date | None,
+	appointment_type: str | None,
+	appointment: str | None = None,
+	include_available_agents: bool = False,
+):
 	appointment_type_doc = frappe.get_cached_doc("Appointment Type", appointment_type)
 	appointment_type_doc.check_permission("read")
 
@@ -711,7 +717,7 @@ def get_appointment_timeslots(scheduled_date, appointment_type, appointment=None
 
 
 @frappe.whitelist()
-def get_appointment_timeslots_for_daterange(appointment_type, from_date, to_date):
+def get_appointment_timeslots_for_daterange(appointment_type: str, from_date: str | datetime.date, to_date: str | datetime.date):
 	appointment_type_doc = frappe.get_cached_doc("Appointment Type", appointment_type)
 	appointment_type_doc.check_permission("read")
 
@@ -872,7 +878,7 @@ def auto_mark_missed():
 
 
 @frappe.whitelist()
-def get_customer_details(args):
+def get_customer_details(args: str | dict):
 	from frappe.model.base_document import get_controller
 
 	if isinstance(args, str):
@@ -927,7 +933,7 @@ def get_customer_details(args):
 
 
 @frappe.whitelist()
-def get_rescheduled_appointment(source_name, target_doc=None):
+def get_rescheduled_appointment(source_name: str, target_doc: str | Document | None = None):
 	def set_missing_values(source, target):
 		target.run_method("set_missing_values")
 
@@ -966,7 +972,7 @@ def get_rescheduled_appointment(source_name, target_doc=None):
 
 
 @frappe.whitelist()
-def update_status(appointment, status):
+def update_status(appointment: str, status: str):
 	doc = frappe.get_doc("Appointment", appointment)
 	doc.check_permission("write")
 	doc.set_status(update=True, status=status)
@@ -1192,7 +1198,7 @@ def get_reminder_date_from_appointment_date(appointment_date):
 
 
 @frappe.whitelist()
-def get_events(start, end, filters=None):
+def get_events(start: str, end: str, filters: str | list | None = None):
 	from frappe.desk.calendar import get_event_conditions
 	conditions = get_event_conditions("Appointment", filters)
 
@@ -1215,7 +1221,7 @@ def get_events(start, end, filters=None):
 
 
 @frappe.whitelist()
-def get_validate_past_timeslot(appointment_type):
+def get_validate_past_timeslot(appointment_type: str | None):
 	if not appointment_type:
 		return False
 
@@ -1223,7 +1229,7 @@ def get_validate_past_timeslot(appointment_type):
 
 
 @frappe.whitelist()
-def link_with_opportunity(appointment, opportunity):
+def link_with_opportunity(appointment: str, opportunity: str):
 	if not appointment:
 		frappe.throw(_("Appointment not provided"))
 	if not opportunity:
@@ -1255,7 +1261,7 @@ def can_link_opportunity():
 
 @frappe.whitelist()
 @frappe.validate_and_sanitize_search_inputs
-def appointment_service_advisor_query(doctype, txt, searchfield, start, page_len, filters):
+def appointment_service_advisor_query(doctype: str, txt: str, searchfield: str, start: int, page_len: int, filters: dict):
 	from frappe.desk.reportview import get_filters_cond, get_match_cond
 
 	from crm.queries import get_fields

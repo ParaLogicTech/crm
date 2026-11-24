@@ -5,6 +5,7 @@ import frappe
 from frappe import _
 from frappe.contacts.address_and_contact import load_address_and_contact
 from frappe.email.inbox import link_communication_to_document
+from frappe.model.document import Document
 from frappe.model.mapper import get_mapped_doc
 from frappe.utils import cint, clean_whitespace, comma_and, cstr, validate_email_address
 from frappe.utils.status_updater import StatusUpdater
@@ -120,7 +121,7 @@ class Lead(StatusUpdater):
 
 
 @frappe.whitelist()
-def make_opportunity(source_name, target_doc=None):
+def make_opportunity(source_name: str, target_doc: str | Document | None = None):
 	def set_missing_values(source, target):
 		target.opportunity_from = "Lead"
 		target.run_method("set_missing_values")
@@ -138,7 +139,7 @@ def make_opportunity(source_name, target_doc=None):
 
 
 @frappe.whitelist()
-def get_lead_contact_details(lead):
+def get_lead_contact_details(lead: str | None):
 	if not lead:
 		return frappe._dict()
 
@@ -189,7 +190,7 @@ def get_lead_address_details(lead, check_permissions=False):
 
 
 @frappe.whitelist()
-def make_lead_from_communication(communication, ignore_communication_links=False):
+def make_lead_from_communication(communication: str, ignore_communication_links: bool = False):
 	""" raise a issue from email """
 
 	doc = frappe.get_doc("Communication", communication)

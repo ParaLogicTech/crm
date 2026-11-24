@@ -45,7 +45,7 @@ class CallLog(Document):
 
 
 @frappe.whitelist()
-def add_call_summary(call_log, summary):
+def add_call_summary(call_log: str, summary: str):
 	doc = frappe.get_doc("Call Log", call_log)
 	doc.add_comment("Comment", frappe.bold(_("Call Summary")) + "<br><br>" + summary)
 

@@ -2,6 +2,7 @@
 # License: GNU General Public License v3. See license.txt
 
 import json
+from datetime import date
 
 import frappe
 from frappe import _
@@ -172,7 +173,13 @@ class Opportunity(StatusUpdater):
 			return follow_up[0]
 
 	@frappe.whitelist()
-	def set_is_lost(self, is_lost, lost_reasons_list=None, detailed_reason=None, lost_date=None):
+	def set_is_lost(
+		self,
+		is_lost: bool,
+		lost_reasons_list: list | None = None,
+		detailed_reason: str | None = None,
+		lost_date: str | date | None = None,
+	):
 		is_lost = cint(is_lost)
 
 		if is_lost and self.is_converted():
@@ -245,7 +252,7 @@ class Opportunity(StatusUpdater):
 
 
 @frappe.whitelist()
-def get_customer_details(args):
+def get_customer_details(args: str | dict):
 	from frappe.model.base_document import get_controller
 
 	if isinstance(args, str):
@@ -302,7 +309,7 @@ def get_customer_details(args):
 
 
 @frappe.whitelist()
-def make_appointment(source_name, target_doc=None):
+def make_appointment(source_name: str, target_doc: str | Document | None = None):
 	def set_missing_values(source, target):
 		default_appointment_type = frappe.get_cached_value("Opportunity Type", source.opportunity_type, "default_appointment_type")
 		if default_appointment_type:
@@ -333,7 +340,7 @@ def make_appointment(source_name, target_doc=None):
 
 
 @frappe.whitelist()
-def set_multiple_status(names, status):
+def set_multiple_status(names: str, status: str):
 	names = json.loads(names)
 	for name in names:
 		opp = frappe.get_doc("Opportunity", name)
@@ -412,7 +419,7 @@ def trigger_recall_lost_opportunities():
 
 
 @frappe.whitelist()
-def schedule_follow_up(name, schedule_date, to_discuss=None):
+def schedule_follow_up(name: str, schedule_date: str | date | None, to_discuss: str | None = None):
 	if not schedule_date:
 		frappe.throw(_("Schedule Date is mandatory"))
 
@@ -426,7 +433,13 @@ def schedule_follow_up(name, schedule_date, to_discuss=None):
 
 
 @frappe.whitelist()
-def submit_communication_with_action(remarks, action, opportunity, follow_up_date=None, lost_reason=None):
+def submit_communication_with_action(
+	remarks: str,
+	action: str,
+	opportunity: str | Document,
+	follow_up_date: str | date | None = None,
+	lost_reason: str | None = None,
+):
 	contact_date = getdate()
 	remarks = clean_whitespace(remarks)
 
@@ -477,7 +490,7 @@ def submit_communication_with_action(remarks, action, opportunity, follow_up_dat
 
 
 @frappe.whitelist()
-def submit_communication(opportunity, contact_date, remarks, update_follow_up=True):
+def submit_communication(opportunity: str | Document, contact_date: str | date, remarks: str, update_follow_up: bool = True):
 	from frappe.model.document import Document
 
 	if not remarks:
@@ -517,7 +530,7 @@ def submit_communication(opportunity, contact_date, remarks, update_follow_up=Tr
 
 
 @frappe.whitelist()
-def get_events(start, end, filters=None):
+def get_events(start: str, end: str, filters: str | list | None = None):
 	from frappe.desk.calendar import get_event_conditions
 	conditions = get_event_conditions("Opportunity", filters)
 
@@ -543,7 +556,7 @@ def get_events(start, end, filters=None):
 
 
 @frappe.whitelist()
-def create_opportunity_from_communication(communication, ignore_communication_links=False):
+def create_opportunity_from_communication(communication: str, ignore_communication_links: bool = False):
 	from crm.crm.doctype.lead.lead import make_lead_from_communication
 	doc = frappe.get_doc("Communication", communication)
 
@@ -567,16 +580,16 @@ def create_opportunity_from_communication(communication, ignore_communication_li
 @frappe.whitelist(allow_guest=True, methods=["POST"])
 @rate_limit(limit=100, seconds=60 * 60)
 def make_opportunity_from_lead_form(
-	sender,
-	message="",
-	subject="Website Query",
-	full_name="",
-	organization="",
-	designation="",
-	mobile_no="",
-	phone_no="",
-	country="",
-	opportunity_args=None,
+	sender: str | None,
+	message: str | None = "",
+	subject: str | None = "Website Query",
+	full_name: str | None = "",
+	organization: str | None = "",
+	designation: str | None = "",
+	mobile_no: str | None = "",
+	phone_no: str | None = "",
+	country: str | None = "",
+	opportunity_args: str | dict | None = None,
 ):
 	# Forward Email Message
 	from frappe.www.contact import process_contact_message
@@ -586,7 +599,9 @@ def make_opportunity_from_lead_form(
 
 	sender = validate_email_address(sender, throw=True)
 
-	opportunity_args = json.loads(opportunity_args) if opportunity_args else {}
+	if opportunity_args and isinstance(opportunity_args, str):
+		opportunity_args = json.loads(opportunity_args)
+	opportunity_args = opportunity_args or {}
 
 	forward_message_args = {
 		"full_name": full_name,

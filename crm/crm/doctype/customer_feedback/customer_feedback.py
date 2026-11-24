@@ -195,7 +195,7 @@ class CustomerFeedback(Document):
 
 
 @frappe.whitelist()
-def get_customer_details(args):
+def get_customer_details(args: str | dict):
 	from frappe.model.base_document import get_controller
 
 	if isinstance(args, str):
@@ -240,7 +240,7 @@ def get_customer_feedback_contact_details(args):
 
 
 @frappe.whitelist()
-def submit_customer_feedback(reference_doctype, reference_name, feedback_or_remark, message):
+def submit_customer_feedback(reference_doctype: str, reference_name: str, feedback_or_remark: str, message: str):
 	if not message:
 		frappe.throw(_("Message cannot be empty"))
 
