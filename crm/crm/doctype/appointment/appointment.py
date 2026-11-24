@@ -122,7 +122,9 @@ class Appointment(StatusUpdater):
 		self.set_customer_details()
 
 	def set_appointment_type_details(self):
-		self.update(get_fetch_values(self.doctype, "appointment_type", self.appointment_type))
+		self.update(get_fetch_values(
+			self.doctype, "appointment_type", self.appointment_type, skip_fetch_if_empty=True
+		))
 
 	def set_previous_appointment_details(self):
 		if self.previous_appointment:
@@ -573,8 +575,10 @@ class Appointment(StatusUpdater):
 
 		# Appointment Start Date/Time is in the past or End Date/Time if cancellation
 		if notification_type in ("Appointment Confirmation", "Appointment Reminder", "Appointment Cancellation"):
-			appointment_dt = self.end_dt if "Appointment Cancellation" else self.scheduled_dt
-			appointment_dt = get_datetime(appointment_dt or self.scheduled_dt)
+			if notification_type == "Appointment Cancellation":
+				appointment_dt = get_datetime(self.end_dt or self.scheduled_dt)
+			else:
+				appointment_dt = get_datetime(self.scheduled_dt)
 
 			if appointment_dt <= now_datetime():
 				if throw:

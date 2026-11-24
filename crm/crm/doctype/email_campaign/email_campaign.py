@@ -57,7 +57,12 @@ class EmailCampaign(Document):
 		elif end_date < today_date:
 			self.status = "Completed"
 
-#called through hooks to send campaign mails to leads
+# called through hooks daily. Statuses are updated first so campaigns starting today send their first email.
+def process_email_campaigns():
+	set_email_campaign_status()
+	send_email_to_leads_or_contacts()
+
+
 def send_email_to_leads_or_contacts():
 	email_campaigns = frappe.get_all("Email Campaign", filters = { 'status': ('not in', ['Unsubscribed', 'Completed', 'Scheduled']) })
 	for camp in email_campaigns:
@@ -94,9 +99,13 @@ def unsubscribe_recipient(unsubscribe, method):
 	if unsubscribe.reference_doctype == 'Email Campaign':
 		frappe.db.set_value("Email Campaign", unsubscribe.reference_name, "status", "Unsubscribed")
 
-#called through hooks to update email campaign status daily
 def set_email_campaign_status():
 	email_campaigns = frappe.get_all("Email Campaign", filters = { 'status': ('!=', 'Unsubscribed')})
 	for entry in email_campaigns:
 		email_campaign = frappe.get_doc("Email Campaign", entry.name)
+		previous_status = email_campaign.status
 		email_campaign.update_status()
+
+		# db_set rather than save, because validate rejects start dates in the past
+		if email_campaign.status != previous_status:
+			email_campaign.db_set("status", email_campaign.status)

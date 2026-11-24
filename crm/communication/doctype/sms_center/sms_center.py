@@ -7,10 +7,20 @@ from frappe.utils import cstr, cint, get_datetime, now_datetime
 from frappe.model.document import Document
 from frappe.core.doctype.sms_settings.sms_settings import send_sms, clean_receiver_number
 
+# Receivers that come from ERPNext DocTypes, which a site with only crm doesn't have
+erpnext_send_to_doctypes = {
+	"All Customer Contact": "Customer",
+	"All Supplier Contact": "Supplier",
+	"All Sales Partner Contact": "Sales Partner",
+	"All Employee (Active)": "Employee",
+}
+
 
 class SMSCenter(Document):
 	@frappe.whitelist()
 	def create_receiver_list(self):
+		self.validate_send_to_installed()
+
 		receivers = []
 
 		if self.send_to in ['All Contact', 'All Customer Contact', 'All Supplier Contact', 'All Sales Partner Contact']:
@@ -95,6 +105,15 @@ class SMSCenter(Document):
 
 		self.receiver_list = "\n".join(receiver_list)
 		self.total_receivers = len(receiver_list)
+
+	def validate_send_to_installed(self):
+		doctype = erpnext_send_to_doctypes.get(self.send_to)
+		if not doctype or frappe.db.table_exists(doctype):
+			return
+
+		frappe.throw(_("Cannot create a receiver list for {0} because {1} is not installed").format(
+			frappe.bold(_(self.send_to)), _(doctype)
+		))
 
 	def get_receiver_nos(self):
 		receiver_nos = []

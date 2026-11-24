@@ -59,8 +59,7 @@ scheduler_events = {
 		"crm.crm.doctype.opportunity.opportunity.auto_mark_opportunity_as_lost",
 		"crm.crm.doctype.appointment.appointment.auto_mark_missed",
 		"crm.crm.doctype.contract.contract.update_status_for_contracts",
-		"crm.crm.doctype.email_campaign.email_campaign.send_email_to_leads_or_contacts",
-		"crm.crm.doctype.email_campaign.email_campaign.set_email_campaign_status",
+		"crm.crm.doctype.email_campaign.email_campaign.process_email_campaigns",
 		"crm.crm.doctype.opportunity.opportunity.trigger_recall_lost_opportunities",
 	]
 }

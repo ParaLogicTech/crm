@@ -180,3 +180,22 @@ def strip_number(number):
 	# eg. 07888383332 should match with 7888383332
 	number = number.lstrip('0')
 	return number
+
+
+def get_phone_number_formats(number):
+	"""Local and international forms of a phone number (for the site's country), to search stored numbers
+	with. Stored numbers are expected without spaces and dashes."""
+	from frappe.regional.regional import get_all_mobile_formats
+
+	number = cstr(number).replace(" ", "").replace("-", "")
+	formats = get_all_mobile_formats(number)
+
+	# Temporary until Pakistani mobile nos are stored without dashes:
+	# they're saved as 03##-#######, so search that form too
+	if frappe.db.get_default("country") == "Pakistan":
+		from frappe.regional.pakistan import mobile_regex
+
+		dashed_formats = [f"{d[:4]}-{d[4:]}" for d in formats]
+		formats += [d for d in dashed_formats if mobile_regex.match(d)]
+
+	return formats

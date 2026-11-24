@@ -641,8 +641,9 @@ def make_opportunity_from_lead_form(
 			old_lead_changed = True
 
 		# Set current number as primary and set old as secondary
-		if mobile_no and old_lead.mobile_no and old_lead.mobile_no != mobile_no:
-			old_lead.mobile_no_2 = old_lead.mobile_no
+		if mobile_no and old_lead.mobile_no != mobile_no:
+			if old_lead.mobile_no:
+				old_lead.mobile_no_2 = old_lead.mobile_no
 			old_lead.mobile_no = mobile_no
 			old_lead_changed = True
 
