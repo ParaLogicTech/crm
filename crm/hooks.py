@@ -13,6 +13,7 @@ app_include_css = "crm.bundle.css"
 web_include_js = "crm-web.bundle.js"
 
 after_install = "crm.setup.install.after_install"
+before_tests = "crm.setup.install.before_tests"
 setup_wizard_stages = "crm.setup.setup_wizard.get_setup_stages"
 
 boot_session = "crm.boot.boot_session"
@@ -59,8 +60,7 @@ scheduler_events = {
 		"crm.crm.doctype.opportunity.opportunity.auto_mark_opportunity_as_lost",
 		"crm.crm.doctype.appointment.appointment.auto_mark_missed",
 		"crm.crm.doctype.contract.contract.update_status_for_contracts",
-		"crm.crm.doctype.email_campaign.email_campaign.send_email_to_leads_or_contacts",
-		"crm.crm.doctype.email_campaign.email_campaign.set_email_campaign_status",
+		"crm.crm.doctype.email_campaign.email_campaign.process_email_campaigns",
 		"crm.crm.doctype.opportunity.opportunity.trigger_recall_lost_opportunities",
 	]
 }

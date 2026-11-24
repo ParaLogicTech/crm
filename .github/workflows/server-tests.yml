@@ -1,0 +1,143 @@
+name: Server
+
+on:
+  push:
+    branches:
+      - version-15
+    paths-ignore:
+      - "**.md"
+  pull_request:
+    paths-ignore:
+      - "**.md"
+  schedule:
+    # Weekly, Sunday 00:00 UTC, to catch frappe changes that break crm
+    - cron: "0 0 * * 0"
+  workflow_dispatch:
+    inputs:
+      frappe_repo:
+        description: "Frappe repository to test against (e.g. a fork with a pending change)"
+        default: "ParaLogicTech/frappe"
+        type: string
+      frappe_branch:
+        description: "Frappe branch"
+        default: "version-15"
+        type: string
+
+concurrency:
+  group: server-${{ github.event_name }}-${{ github.event.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Unit Tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+
+    services:
+      mariadb:
+        image: mariadb:10.6.24
+        env:
+          MARIADB_ROOT_PASSWORD: root
+        ports:
+          - 3306:3306
+        options: --health-cmd="mariadb-admin ping" --health-interval=5s --health-timeout=2s --health-retries=3
+
+    steps:
+      - name: Clone
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Check for valid Python & Merge Conflicts
+        run: |
+          python -m compileall -q -f "${GITHUB_WORKSPACE}"
+          if grep -lr --exclude-dir=node_modules "^<<<<<<< " "${GITHUB_WORKSPACE}"
+              then echo "Found merge conflicts"
+              exit 1
+          fi
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          check-latest: true
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/*requirements.txt', '**/pyproject.toml', '**/setup.py') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+            ${{ runner.os }}-
+
+      - name: Get yarn cache directory path
+        id: yarn-cache-dir-path
+        run: echo "dir=$(yarn cache dir)" >> $GITHUB_OUTPUT
+
+      - uses: actions/cache@v4
+        with:
+          path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
+          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
+
+      # Redis comes from Ubuntu and is started by `bench start`, as in frappe's CI
+      - name: Install System Dependencies
+        run: sudo apt-get update && sudo apt-get install -y redis-server mariadb-client
+
+      # crm depends on ParaLogic's frappe fork, not stock frappe
+      - name: Setup Bench
+        run: |
+          pip install frappe-bench
+          bench init --skip-assets --python "$(which python)" \
+            --frappe-path "https://github.com/${FRAPPE_REPO}" --frappe-branch "${FRAPPE_BRANCH}" ~/frappe-bench
+          mariadb --host 127.0.0.1 --port 3306 -u root -proot -e "SET GLOBAL character_set_server = 'utf8mb4'"
+          mariadb --host 127.0.0.1 --port 3306 -u root -proot -e "SET GLOBAL collation_server = 'utf8mb4_unicode_ci'"
+        env:
+          FRAPPE_REPO: ${{ inputs.frappe_repo || 'ParaLogicTech/frappe' }}
+          FRAPPE_BRANCH: ${{ inputs.frappe_branch || 'version-15' }}
+
+      - name: Install
+        working-directory: /home/runner/frappe-bench
+        run: |
+          bench get-app crm "${GITHUB_WORKSPACE}"
+          bench setup requirements --dev
+
+          sed -i 's/^watch:/# watch:/g' Procfile
+          sed -i 's/^schedule:/# schedule:/g' Procfile
+          sed -i 's/^socketio:/# socketio:/g' Procfile
+          sed -i 's/^redis_socketio:/# redis_socketio:/g' Procfile
+          bench start &> bench_start.log &
+
+          for port in 13000 11000; do
+            timeout 60 bash -c "until redis-cli -p $port ping; do sleep 1; done"
+          done
+
+          bench new-site --db-host 127.0.0.1 --db-root-password root --admin-password admin test_site
+          bench --site test_site install-app crm
+          bench build
+        env:
+          CI: "Yes"
+
+      - name: Run Tests
+        working-directory: /home/runner/frappe-bench
+        run: |
+          bench --site test_site set-config allow_tests true
+          bench --site test_site run-tests --app crm
+
+      - name: Show bench output
+        if: ${{ always() }}
+        working-directory: /home/runner/frappe-bench
+        run: |
+          cat bench_start.log || true
+          for f in logs/*.log*; do
+            echo "Printing log: $f"
+            cat "$f"
+          done

@@ -5,16 +5,14 @@
 import frappe
 from frappe import _
 from frappe.model.document import Document
-from crm.crm.utils import get_scheduled_employees_for_popup, strip_number
-from frappe.contacts.doctype.contact.contact import get_contact_with_phone_number
+from crm.crm.utils import get_phone_number_formats, get_scheduled_employees_for_popup, strip_number
 from crm.crm.doctype.lead.lead import get_lead_with_phone_number
 
 
 class CallLog(Document):
 	def before_insert(self):
-		number = strip_number(self.get('from'))
-		self.contact = get_contact_with_phone_number(number)
-		self.lead = get_lead_with_phone_number(number)
+		self.contact = get_contact_with_phone_number(self.get('from'))
+		self.lead = get_lead_with_phone_number(self.get('from'))
 
 	def after_insert(self):
 		self.trigger_call_popup()
@@ -28,6 +26,10 @@ class CallLog(Document):
 			self.trigger_call_popup()
 
 	def trigger_call_popup(self):
+		# Popup recipients are Employees, which come from ERPNext. Without it there is no one to notify.
+		if not has_employee_doctypes():
+			return
+
 		scheduled_employees = get_scheduled_employees_for_popup(self.medium)
 		employee_emails = get_employees_with_number(self.to)
 
@@ -45,6 +47,23 @@ class CallLog(Document):
 def add_call_summary(call_log, summary):
 	doc = frappe.get_doc('Call Log', call_log)
 	doc.add_comment('Comment', frappe.bold(_('Call Summary')) + '<br><br>' + summary)
+
+
+def get_contact_with_phone_number(number):
+	phone_numbers = get_phone_number_formats(number)
+	if not phone_numbers:
+		return None
+
+	contacts = frappe.get_all("Contact Phone", filters={
+		"parenttype": "Contact",
+		"phone": ["in", phone_numbers],
+	}, pluck="parent", limit=1)
+
+	return contacts[0] if contacts else None
+
+
+def has_employee_doctypes():
+	return frappe.db.table_exists("Employee") and frappe.db.table_exists("Employee Group Table")
 
 
 def get_employees_with_number(number):
@@ -81,18 +100,18 @@ def set_caller_information(doc, state):
 		numbers = [d.phone for d in doc.phone_nos]
 
 	for number in numbers:
-		number = strip_number(number)
-		if not number: continue
+		phone_numbers = get_phone_number_formats(number)
+		if not phone_numbers:
+			continue
 
-		filters = frappe._dict({
-			'from': ['like', '%{}'.format(number)],
-			fieldname: ''
-		})
-
-		logs = frappe.get_all('Call Log', filters=filters)
+		# only calls not yet linked to a lead / contact
+		logs = frappe.get_all("Call Log", filters={
+			"from": ["in", phone_numbers],
+			fieldname: "",
+		}, pluck="name")
 
 		for log in logs:
-			frappe.db.set_value('Call Log', log.name, {
+			frappe.db.set_value('Call Log', log, {
 				fieldname: doc.name,
 				display_name_field: doc.get_title()
 			}, update_modified=False)

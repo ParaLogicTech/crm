@@ -216,13 +216,15 @@ def make_lead_from_communication(communication, ignore_communication_links=False
 
 
 def get_lead_with_phone_number(number):
-	if not number: return
+	from crm.crm.utils import get_phone_number_formats
 
-	leads = frappe.get_all('Lead', or_filters={
-		'phone': ['like', '%{}'.format(number)],
-		'mobile_no': ['like', '%{}'.format(number)]
-	}, limit=1)
+	phone_numbers = get_phone_number_formats(number)
+	if not phone_numbers:
+		return None
 
-	lead = leads[0].name if leads else None
+	leads = frappe.get_all("Lead", or_filters={
+		"phone": ["in", phone_numbers],
+		"mobile_no": ["in", phone_numbers],
+	}, pluck="name", limit=1)
 
-	return lead
+	return leads[0] if leads else None
