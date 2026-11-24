@@ -563,8 +563,8 @@ def create_opportunity_from_communication(communication, ignore_communication_li
 	return opportunity.name
 
 
-@frappe.whitelist(allow_guest=True)
-@rate_limit(limit=10, seconds=60 * 60)
+@frappe.whitelist(allow_guest=True, methods=["POST"])
+@rate_limit(limit=100, seconds=60 * 60)
 def make_opportunity_from_lead_form(
 	sender,
 	message="",
@@ -578,7 +578,7 @@ def make_opportunity_from_lead_form(
 	opportunity_args=None
 ):
 	# Forward Email Message
-	from frappe.www.contact import send_message as website_send_message
+	from frappe.www.contact import process_contact_message
 
 	if not sender:
 		frappe.throw(_("Please enter your email address"))
@@ -599,7 +599,7 @@ def make_opportunity_from_lead_form(
 		if not forward_message_args.get(key):
 			forward_message_args[key] = value
 
-	website_send_message(sender=sender, subject=subject, message=message, args=forward_message_args,
+	process_contact_message(sender=sender, subject=subject, message=message, args=forward_message_args,
 		create_communication=False)
 
 	default_lead_source = frappe.db.get_single_value("Contact Us Settings", "default_lead_source")
