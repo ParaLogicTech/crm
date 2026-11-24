@@ -13,7 +13,6 @@ frappe.query_reports["Campaign Efficiency"] = {
 			"label": __("To Date"),
 			"fieldtype": "Date",
 			"default": frappe.defaults.get_user_default("year_end_date"),
-		}
-	]
+		},
+	],
 };
-

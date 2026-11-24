@@ -7,7 +7,7 @@ from frappe.utils.nestedset import NestedSet, get_root_of
 
 
 class SalesPerson(NestedSet):
-	nsm_parent_field = 'parent_sales_person'
+	nsm_parent_field = "parent_sales_person"
 
 	def validate(self):
 		self.set_missing_parent_sales_person()

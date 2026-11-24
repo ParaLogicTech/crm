@@ -64,7 +64,7 @@ class TestAppointment(CRMTestCase):
 		appointment_type = make_appointment_type(appointment_duration=45)
 
 		appointment = make_appointment(
-			appointment_type=appointment_type.name, scheduled_dt=get_dt(date, "10:00")
+			appointment_type=appointment_type.name, scheduled_dt=get_dt(date, "10:00"),
 		)
 		self.assertEqual(appointment.scheduled_dt, get_dt(date, "10:00"))
 		self.assertEqual(appointment.end_dt, get_dt(date, "10:45"))
@@ -170,7 +170,7 @@ class TestAppointment(CRMTestCase):
 		appointment_type = make_appointment_type(validate_availability=1, advance_booking_days=1)
 
 		make_appointment(
-			appointment_type=appointment_type.name, scheduled_dt=get_dt(add_days(nowdate(), 1), "10:00")
+			appointment_type=appointment_type.name, scheduled_dt=get_dt(add_days(nowdate(), 1), "10:00"),
 		)
 		self.assertRaises(
 			frappe.ValidationError,
@@ -186,7 +186,7 @@ class TestAppointment(CRMTestCase):
 		# Draft appointments don't take up a slot
 		make_appointment(appointment_type=appointment_type.name, scheduled_dt=get_dt(date, "10:00"))
 		make_appointment(
-			appointment_type=appointment_type.name, scheduled_dt=get_dt(date, "10:00"), submit=True
+			appointment_type=appointment_type.name, scheduled_dt=get_dt(date, "10:00"), submit=True,
 		)
 
 		self.assertRaises(
@@ -299,7 +299,7 @@ class TestAppointment(CRMTestCase):
 
 		# A rescheduled appointment frees its time slot
 		self.assertEqual(
-			count_appointments_in_slot(previous.scheduled_dt, previous.end_dt, appointment_type.name), 0
+			count_appointments_in_slot(previous.scheduled_dt, previous.end_dt, appointment_type.name), 0,
 		)
 		make_appointment(appointment_type=appointment_type.name, scheduled_dt=get_dt(date, "10:00"))
 
@@ -317,7 +317,7 @@ class TestAppointment(CRMTestCase):
 
 	def test_clean_remarks(self):
 		appointment = make_appointment(
-			remarks="  Customer   will be late ", voice_of_customer=" Brake   issue "
+			remarks="  Customer   will be late ", voice_of_customer=" Brake   issue ",
 		)
 		self.assertEqual(appointment.remarks, "Customer will be late")
 		self.assertEqual(appointment.voice_of_customer, "Brake issue")
@@ -367,7 +367,7 @@ class TestAppointment(CRMTestCase):
 		date = add_days(nowdate(), 2)
 		appointment_type = make_appointment_type(number_of_agents=1, slots=[get_slot(date, "09:00", "11:00")])
 		make_appointment(
-			appointment_type=appointment_type.name, scheduled_dt=get_dt(date, "09:00"), submit=True
+			appointment_type=appointment_type.name, scheduled_dt=get_dt(date, "09:00"), submit=True,
 		)
 
 		out = get_appointment_timeslots_for_daterange(appointment_type.name, date, add_days(date, 1))
@@ -468,7 +468,7 @@ class TestAppointmentOpportunity(CRMTestCase):
 				"doctype": "Opportunity Type",
 				"name": "_Test Appointment Opportunity Type",
 				"default_appointment_type": appointment_type.name,
-			}
+			},
 		).insert(ignore_if_duplicate=True)
 		sales_person = make_sales_person(is_service_advisor=0)
 		opportunity = make_opportunity(opportunity_type=opportunity_type.name, sales_person=sales_person.name)
@@ -497,7 +497,7 @@ class TestAppointmentOpportunity(CRMTestCase):
 		# Intended: the Opportunity stays converted while a cancelled Appointment is amended
 		opportunity = make_opportunity()
 		appointment = make_appointment(
-			opportunity=opportunity.name, party_name=opportunity.party_name, submit=True
+			opportunity=opportunity.name, party_name=opportunity.party_name, submit=True,
 		)
 
 		appointment.cancel()
@@ -523,7 +523,7 @@ class TestAppointmentOpportunity(CRMTestCase):
 		self.assertEqual(frappe.db.get_value("Opportunity", opportunity.name, "status"), "Converted")
 
 		self.assertRaises(
-			frappe.ValidationError, link_with_opportunity, appointment.name, make_opportunity().name
+			frappe.ValidationError, link_with_opportunity, appointment.name, make_opportunity().name,
 		)
 
 	def test_link_with_opportunity_after_appointment_date(self):
@@ -544,19 +544,20 @@ class TestAppointmentOpportunity(CRMTestCase):
 
 		link_with_opportunity(previous.name, opportunity.name)
 		self.assertEqual(
-			frappe.db.get_value("Appointment", rescheduled.name, "opportunity"), opportunity.name
+			frappe.db.get_value("Appointment", rescheduled.name, "opportunity"), opportunity.name,
 		)
+
+
+REMINDER_SETTINGS = {
+	"appointment_reminder_days_before": 1,
+	"appointment_reminder_time": "00:00:00",
+	"appointment_reminder_confirmation_hours": 0,
+}
 
 
 class TestAppointmentNotifications(CRMTestCase):
 	"""crm decides when to notify by running notify_appointment_* methods. Notifications and other apps'
 	doc_events do the sending, so these tests record the methods instead."""
-
-	reminder_settings = {
-		"appointment_reminder_days_before": 1,
-		"appointment_reminder_time": "00:00:00",
-		"appointment_reminder_confirmation_hours": 0,
-	}
 
 	def setUp(self):
 		super().setUp()
@@ -598,7 +599,7 @@ class TestAppointmentNotifications(CRMTestCase):
 		later = make_confirmed_appointment(get_dt(add_days(nowdate(), 2), "10:00"))
 		self.notified.clear()
 
-		with change_settings("Appointment Booking Settings", self.reminder_settings), reminders_enabled():
+		with change_settings("Appointment Booking Settings", REMINDER_SETTINGS), reminders_enabled():
 			run_scheduler_job(send_appointment_reminder_notifications)
 			self.assertEqual(self.notified, [(due.name, "notify_appointment_reminder")])
 			self.assertNotIn(later.name, [name for name, method in self.notified])
@@ -611,7 +612,7 @@ class TestAppointmentNotifications(CRMTestCase):
 		make_confirmed_appointment(get_dt(add_days(nowdate(), 1), "10:00"))
 		self.notified.clear()
 
-		settings = {**self.reminder_settings, "appointment_reminder_time": "23:59:59"}
+		settings = {**REMINDER_SETTINGS, "appointment_reminder_time": "23:59:59"}
 		with change_settings("Appointment Booking Settings", settings), reminders_enabled():
 			run_scheduler_job(send_appointment_reminder_notifications)
 
@@ -622,7 +623,7 @@ class TestAppointmentNotifications(CRMTestCase):
 		self.notified.clear()
 
 		with (
-			change_settings("Appointment Booking Settings", self.reminder_settings),
+			change_settings("Appointment Booking Settings", REMINDER_SETTINGS),
 			reminders_enabled(False),
 		):
 			run_scheduler_job(send_appointment_reminder_notifications)
@@ -643,7 +644,7 @@ class TestAppointmentNotifications(CRMTestCase):
 			{"reference_doctype": "Appointment", "reference_name": failing.name},
 		)
 
-		with change_settings("Appointment Booking Settings", self.reminder_settings), reminders_enabled():
+		with change_settings("Appointment Booking Settings", REMINDER_SETTINGS), reminders_enabled():
 			run_scheduler_job(send_appointment_reminder_notifications)
 
 		self.assertIn((other.name, "notify_appointment_reminder"), self.notified)
@@ -655,7 +656,7 @@ class TestAppointmentNotifications(CRMTestCase):
 					"reference_name": failing.name,
 					"method": "Error sending Appointment Reminder Notification",
 				},
-			)
+			),
 		)
 
 	def test_missed_notifications(self):
@@ -685,7 +686,7 @@ class TestAppointmentNotifications(CRMTestCase):
 
 	def test_reminder_schedule(self):
 		scheduled_dt = get_dt(add_days(nowdate(), 2), "10:00")
-		settings = {**self.reminder_settings, "appointment_reminder_time": "09:00:00"}
+		settings = {**REMINDER_SETTINGS, "appointment_reminder_time": "09:00:00"}
 
 		with change_settings("Appointment Booking Settings", settings):
 			draft = make_appointment(scheduled_dt=scheduled_dt)
@@ -726,7 +727,7 @@ def get_appointment(appointment_type=None, scheduled_dt=None, **kwargs):
 			"appointment_type": appointment_type or make_appointment_type().name,
 			"scheduled_date": getdate(scheduled_dt),
 			"scheduled_time": get_time(scheduled_dt),
-		}
+		},
 	)
 	appointment.update(kwargs)
 
@@ -751,7 +752,7 @@ def make_appointment_source(**kwargs):
 		{
 			"doctype": "Appointment Source",
 			"source_name": "_Test Appointment Source " + frappe.generate_hash(length=8),
-		}
+		},
 	)
 	source.update(kwargs)
 	source.insert()

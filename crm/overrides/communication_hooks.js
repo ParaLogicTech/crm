@@ -1,7 +1,7 @@
 frappe.ui.form.on("Communication", {
 	refresh: (frm) => {
 		// setup custom Make button only if Communication is Email
-		if(frm.doc.communication_medium == "Email" && frm.doc.sent_or_received == "Received") {
+		if (frm.doc.communication_medium == "Email" && frm.doc.sent_or_received == "Received") {
 			frm.events.setup_crm_buttons(frm);
 		}
 	},
@@ -11,15 +11,15 @@ frappe.ui.form.on("Communication", {
 		if (!in_list(["Lead", "Opportunity"], frm.doc.reference_doctype)) {
 			frm.add_custom_button(__("Lead"), () => {
 				frappe.confirm(__(confirm_msg, [__("Lead")]), () => {
-					frm.trigger('make_lead_from_communication');
-				})
-			}, __('Create'));
+					frm.trigger("make_lead_from_communication");
+				});
+			}, __("Create"));
 
 			frm.add_custom_button(__("Opportunity"), () => {
 				frappe.confirm(__(confirm_msg, [__("Opportunity")]), () => {
-					frm.trigger('create_opportunity_from_communication');
-				})
-			}, __('Create'));
+					frm.trigger("create_opportunity_from_communication");
+				});
+			}, __("Create"));
 		}
 	},
 
@@ -27,15 +27,15 @@ frappe.ui.form.on("Communication", {
 		return frappe.call({
 			method: "crm.crm.doctype.lead.lead.make_lead_from_communication",
 			args: {
-				communication: frm.doc.name
+				communication: frm.doc.name,
 			},
 			freeze: true,
 			callback: (r) => {
-				if(r.message) {
-					frm.reload_doc()
+				if (r.message) {
+					frm.reload_doc();
 				}
-			}
-		})
+			},
+		});
 	},
 
 	create_opportunity_from_communication: (frm) => {
@@ -47,16 +47,16 @@ frappe.ui.form.on("Communication", {
 				},
 				freeze: true,
 				callback: (r) => {
-					if(r.message) {
+					if (r.message) {
 						frm.reload_doc();
 						frappe.show_alert({
 							message: __("Opportunity {0} created",
-								['<a href="/app/opportunity/'+r.message+'">' + r.message + '</a>']),
-							indicator: 'green'
+								['<a href="/app/opportunity/' + r.message + '">' + r.message + "</a>"]),
+							indicator: "green",
 						});
 					}
-				}
+				},
 			});
 		});
-	}
+	},
 });

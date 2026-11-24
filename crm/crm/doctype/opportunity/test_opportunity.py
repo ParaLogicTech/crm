@@ -134,7 +134,7 @@ class TestOpportunity(CRMTestCase):
 	def test_reopen_lost_opportunity(self):
 		opportunity = make_opportunity()
 		opportunity.set_is_lost(
-			1, lost_reasons_list=[{"lost_reason": make_lost_reason()}], detailed_reason="Lost"
+			1, lost_reasons_list=[{"lost_reason": make_lost_reason()}], detailed_reason="Lost",
 		)
 
 		opportunity.set_is_lost(0)
@@ -213,7 +213,7 @@ class TestOpportunity(CRMTestCase):
 
 		# The follow up date passes without contacting the customer
 		frappe.db.set_value(
-			"Lead Follow Up", opportunity.contact_schedule[0].name, "schedule_date", add_days(nowdate(), -1)
+			"Lead Follow Up", opportunity.contact_schedule[0].name, "schedule_date", add_days(nowdate(), -1),
 		)
 		opportunity.reload()
 		opportunity.save()
@@ -240,7 +240,7 @@ class TestOpportunity(CRMTestCase):
 
 		self.assertRaises(frappe.ValidationError, schedule_follow_up, opportunity.name, None)
 		self.assertRaises(
-			frappe.ValidationError, schedule_follow_up, opportunity.name, add_days(nowdate(), -1)
+			frappe.ValidationError, schedule_follow_up, opportunity.name, add_days(nowdate(), -1),
 		)
 
 		schedule_follow_up(opportunity.name, add_days(nowdate(), 2), "Send brochure")
@@ -361,7 +361,7 @@ class TestOpportunity(CRMTestCase):
 		opportunity = frappe.get_doc("Opportunity", create_opportunity_from_communication(communication.name))
 		self.assertEqual(opportunity.opportunity_from, "Lead")
 		self.assertEqual(
-			frappe.db.get_value("Lead", opportunity.party_name, "email_id"), "enquiry@example.com"
+			frappe.db.get_value("Lead", opportunity.party_name, "email_id"), "enquiry@example.com",
 		)
 
 		communication.reload()
@@ -482,7 +482,7 @@ class TestOpportunityLeadForm(CRMTestCase):
 		sender = make_email("jane.doe")
 		submit_lead_form(sender=sender)
 		self.assertEqual(
-			frappe.db.get_value("Lead", {"email_id": sender}, "lead_name"), sender.split("@")[0].title()
+			frappe.db.get_value("Lead", {"email_id": sender}, "lead_name"), sender.split("@")[0].title(),
 		)
 
 	def test_invalid_email(self):
@@ -532,13 +532,13 @@ class TestOpportunityLeadForm(CRMTestCase):
 
 	def test_default_lead_source_and_opportunity_type(self):
 		frappe.get_doc({"doctype": "Opportunity Type", "name": "_Test Web Enquiry"}).insert(
-			ignore_if_duplicate=True
+			ignore_if_duplicate=True,
 		)
 
 		contact_us_settings = frappe.get_single("Contact Us Settings")
 		contact_us_settings.default_lead_source = "Advertisement"
 		contact_us_settings.append(
-			"query_options", {"option": "Service Booking", "opportunity_type": "_Test Web Enquiry"}
+			"query_options", {"option": "Service Booking", "opportunity_type": "_Test Web Enquiry"},
 		)
 		contact_us_settings.save()
 
@@ -560,13 +560,13 @@ class TestOpportunityLeadForm(CRMTestCase):
 				{
 					"lead_classification": "Hot",
 					"not_a_field": "ignored",
-				}
+				},
 			),
 		)
 
 		lead = frappe.db.get_value("Lead", {"email_id": sender})
 		self.assertEqual(
-			frappe.db.get_value("Opportunity", {"party_name": lead}, "lead_classification"), "Hot"
+			frappe.db.get_value("Opportunity", {"party_name": lead}, "lead_classification"), "Hot",
 		)
 
 

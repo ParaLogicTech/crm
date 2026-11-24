@@ -7,7 +7,7 @@ frappe.views.calendar["Appointment"] = {
 		"end": "end_dt",
 		"id": "name",
 		"title": "customer_name",
-		"allDay": "allDay"
+		"allDay": "allDay",
 	},
 	gantt: false,
 	get_events_method: "crm.crm.doctype.appointment.appointment.get_events",
@@ -21,5 +21,5 @@ frappe.views.calendar["Appointment"] = {
 		} else if (["Closed", "Converted"].includes(doc.status)) {
 			return "success";
 		}
-	}
-}
+	},
+};

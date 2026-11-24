@@ -6,7 +6,7 @@ from frappe.utils.nestedset import NestedSet, get_root_of
 
 
 class Territory(NestedSet):
-	nsm_parent_field = 'parent_territory'
+	nsm_parent_field = "parent_territory"
 
 	def validate(self):
 		if not self.parent_territory:

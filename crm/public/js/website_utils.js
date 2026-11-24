@@ -54,7 +54,7 @@ Object.assign(crm, {
 	// 	error: Function,
 	// 	always: Function,
 	// }
-	bind_newsletter_subscription: function ($email_input, $subscribe_btn, opts) {
+	bind_newsletter_subscription: function($email_input, $subscribe_btn, opts) {
 		if (!opts) opts = {};
 		if (!opts.loading_label) opts.loading_label = __("Subscribing...");
 		if (!opts.subscribed_label) opts.subscribed_label = __("Subscribed");
@@ -62,7 +62,7 @@ Object.assign(crm, {
 		if (!opts.confirmation_sent_label) opts.confirmation_sent_label = __("Sent");
 
 		// handle enter key
-		$($email_input).off("keypress").on("keypress", function (e) {
+		$($email_input).off("keypress").on("keypress", function(e) {
 			if (e.key === "Enter") {
 				e.preventDefault();
 				$subscribe_btn.click();
@@ -80,14 +80,14 @@ Object.assign(crm, {
 
 			if (!validate_email(email)) {
 				frappe.msgprint(__("<b>{0}</b> is not a valid email address", [email]));
-				return
+				return;
 			}
 
-			$email_input.attr('disabled', true);
+			$email_input.attr("disabled", true);
 			$subscribe_btn.html(opts.loading_label).attr("disabled", true);
 
 			let handle_error = () => {
-				$email_input.val("").attr('disabled', false);
+				$email_input.val("").attr("disabled", false);
 				$subscribe_btn.html(opts.error_label).attr("disabled", false);
 
 				opts.error && opts.error();
@@ -99,12 +99,12 @@ Object.assign(crm, {
 				callback: (r) => {
 					if (r.message == "subscribed") {
 						$subscribe_btn.html(opts.subscribed_label).attr("disabled", true);
-						$email_input.attr('disabled', true);
+						$email_input.attr("disabled", true);
 
 						opts.callback && opts.callback(r);
 					} else if (r.message == "confirmation") {
 						$subscribe_btn.html(opts.confirmation_sent_label).attr("disabled", true);
-						$email_input.attr('disabled', true);
+						$email_input.attr("disabled", true);
 
 						opts.callback && opts.callback(r);
 					} else {
@@ -116,7 +116,7 @@ Object.assign(crm, {
 				},
 			});
 		});
-	}
+	},
 });
 
 // Backwards compatibility

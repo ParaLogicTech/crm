@@ -1,6 +1,6 @@
 frappe.provide("crm");
 
-crm.make_appointment_slot_picker = function (frm, wrapper, title) {
+crm.make_appointment_slot_picker = function(frm, wrapper, title) {
 	$(wrapper).empty();
 	if (title) {
 		$(`<label class="control-label">${title}</label>`).appendTo(wrapper);
@@ -16,10 +16,10 @@ crm.AppointmentSlotPicker = Class.extend({
 		me.frm = frm;
 
 		me.wrapper = $(wrapper);
-		me.message_wrapper = $(`<div></div>`).appendTo(me.wrapper);
-		me.slot_picker_wrapper = $(`<div class="row appointment-slot-picker"></div>`).appendTo(me.wrapper);
+		me.message_wrapper = $("<div></div>").appendTo(me.wrapper);
+		me.slot_picker_wrapper = $("<div class=\"row appointment-slot-picker\"></div>").appendTo(me.wrapper);
 		if (me.is_editable()) {
-			me.slot_picker_wrapper.addClass('editable');
+			me.slot_picker_wrapper.addClass("editable");
 		}
 
 		me.timeslots = [];
@@ -36,11 +36,11 @@ crm.AppointmentSlotPicker = Class.extend({
 		me.bind();
 	},
 
-	is_editable: function () {
+	is_editable: function() {
 		return this.frm.doc.docstatus == 0;
 	},
 
-	load_slots_and_render: function () {
+	load_slots_and_render: function() {
 		var me = this;
 
 		if (me.frm.doc.scheduled_date && me.frm.doc.appointment_type) {
@@ -50,13 +50,13 @@ crm.AppointmentSlotPicker = Class.extend({
 					scheduled_date: me.frm.doc.scheduled_date,
 					appointment_type: me.frm.doc.appointment_type,
 				},
-				callback: function (r) {
+				callback: function(r) {
 					if (r.message && !r.exc) {
 						me.timeslots = r.message.timeslots;
 						me.holiday = r.message.holiday;
 						me.render_slot_picker();
 					}
-				}
+				},
 			});
 		} else {
 			me.timeslots = [];
@@ -65,20 +65,20 @@ crm.AppointmentSlotPicker = Class.extend({
 		}
 	},
 
-	render_slot_picker: function () {
+	render_slot_picker: function() {
 		this.clear();
 
 		if (this.frm.doc.scheduled_date && this.frm.doc.appointment_type) {
 			if (this.holiday) {
 				this.render_message(__("{0} is a holiday: {1}",
-					[moment(this.frm.doc.scheduled_date).format('dddd, D MMMM, YYYY'), this.holiday]));
+					[moment(this.frm.doc.scheduled_date).format("dddd, D MMMM, YYYY"), this.holiday]));
 			}
 
 			if (this.timeslots && this.timeslots.length) {
 				this.render_slots();
 			} else if (this.timeslots) {
 				this.render_message(__("No timeslots available on {0} for Appointment Type {1}.",
-					[moment(this.frm.doc.scheduled_date).format('dddd, D MMMM, YYYY'), this.frm.doc.appointment_type]));
+					[moment(this.frm.doc.scheduled_date).format("dddd, D MMMM, YYYY"), this.frm.doc.appointment_type]));
 			} else {
 				this.render_message(__("No timeslots configured for Appointment Type {0}.",
 					[this.frm.doc.appointment_type]));
@@ -91,10 +91,10 @@ crm.AppointmentSlotPicker = Class.extend({
 	render_slots: function() {
 		var me = this;
 
-		var container = $(`<div class='container-fluid'></div>`).appendTo(me.slot_picker_wrapper);
-		var row = $(`<div class='row'></div>`).appendTo(container);
+		var container = $("<div class='container-fluid'></div>").appendTo(me.slot_picker_wrapper);
+		var row = $("<div class='row'></div>").appendTo(container);
 
-		$.each(me.timeslots || [], function (i, slot) {
+		$.each(me.timeslots || [], function(i, slot) {
 			// indicator
 			var indicator_color;
 			if (slot.available > 0) {
@@ -151,11 +151,11 @@ crm.AppointmentSlotPicker = Class.extend({
 					<div class="card-body text-center" style="padding: 10px;">
 						<div class="card-title bold">
 							<span class="indicator ${indicator_color}" style="font-size: 15px; color: inherit">
-								${moment(slot.timeslot_start).format('hh:mm A')}
+								${moment(slot.timeslot_start).format("hh:mm A")}
 							</span>
 						</div>
 
-						<div class="small">till ${moment(slot.timeslot_end).format('hh:mm A')}</div>
+						<div class="small">till ${moment(slot.timeslot_end).format("hh:mm A")}</div>
 
 						<hr style="margin-top: 5px; margin-bottom: 5px;">
 
@@ -169,16 +169,16 @@ crm.AppointmentSlotPicker = Class.extend({
 		});
 	},
 
-	render_message: function (message) {
+	render_message: function(message) {
 		$(`<div style="margin-bottom: 10px;">${message}</div>`).appendTo(this.message_wrapper);
 	},
 
-	clear: function () {
+	clear: function() {
 		this.slot_picker_wrapper.empty();
 		this.message_wrapper.empty();
 	},
 
-	timeslot_in_scheduled_time: function (slot) {
+	timeslot_in_scheduled_time: function(slot) {
 		if (!this.frm.doc.scheduled_dt || !this.frm.doc.end_dt) {
 			return false;
 		}
@@ -187,19 +187,19 @@ crm.AppointmentSlotPicker = Class.extend({
 			&& moment(slot.timeslot_end).isAfter(moment(this.frm.doc.scheduled_dt));
 	},
 
-	bind: function () {
+	bind: function() {
 		var me = this;
 
 		if (me.is_editable()) {
-			me.slot_picker_wrapper.on("click", ".appointment-timeslot", function () {
+			me.slot_picker_wrapper.on("click", ".appointment-timeslot", function() {
 				me.on_timeslot_click(this);
 			});
 		}
 	},
 
-	on_timeslot_click: function (el) {
-		var timeslot_start = $(el).attr('data-timeslot-start');
-		var timeslot_duration = cint($(el).attr('data-timeslot-duration'));
+	on_timeslot_click: function(el) {
+		var timeslot_start = $(el).attr("data-timeslot-start");
+		var timeslot_duration = cint($(el).attr("data-timeslot-duration"));
 
 		if (timeslot_start && timeslot_duration) {
 			this.frm.cscript.set_scheduled_timeslot(timeslot_start, timeslot_duration);

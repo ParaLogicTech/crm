@@ -3,11 +3,11 @@
 
 import frappe
 from frappe import _
-from frappe.utils import validate_email_address, cint, cstr, comma_and, clean_whitespace
-from frappe.model.mapper import get_mapped_doc
-from frappe.utils.status_updater import StatusUpdater
 from frappe.contacts.address_and_contact import load_address_and_contact
 from frappe.email.inbox import link_communication_to_document
+from frappe.model.mapper import get_mapped_doc
+from frappe.utils import cint, clean_whitespace, comma_and, cstr, validate_email_address
+from frappe.utils.status_updater import StatusUpdater
 
 sender_field = "email_id"
 
@@ -22,7 +22,7 @@ class Lead(StatusUpdater):
 		]
 
 	def get_feed(self):
-		return '{0}: {1}'.format(_(self.status), self.lead_name)
+		return "{0}: {1}".format(_(self.status), self.lead_name)
 
 	def onload(self):
 		load_address_and_contact(self)
@@ -61,16 +61,16 @@ class Lead(StatusUpdater):
 
 	def validate_mobile_no(self):
 		from frappe.regional.regional import validate_mobile_no
-		if self.get('mobile_no_2') and not self.get('mobile_no'):
+		if self.get("mobile_no_2") and not self.get("mobile_no"):
 			self.mobile_no = self.mobile_no_2
 			self.mobile_no_2 = ""
 
-		validate_mobile_no(self.get('mobile_no'))
-		validate_mobile_no(self.get('mobile_no_2'))
+		validate_mobile_no(self.get("mobile_no"))
+		validate_mobile_no(self.get("mobile_no_2"))
 
 	def validate_tax_id(self):
 		from frappe.regional.regional import validate_tax_ids
-		validate_tax_ids(self.get('tax_id'), self.get('tax_cnic'), self.get('tax_strn'))
+		validate_tax_ids(self.get("tax_id"), self.get("tax_cnic"), self.get("tax_strn"))
 
 	def check_email_id_is_unique(self):
 		if self.email_id:
@@ -93,7 +93,7 @@ class Lead(StatusUpdater):
 			return False
 
 		return frappe.db.get_value("Opportunity", {
-			"opportunity_from": "Lead", "party_name": self.name, "status": ["!=", "Lost"]
+			"opportunity_from": "Lead", "party_name": self.name, "status": ["!=", "Lost"],
 		})
 
 	def is_lost_opportunity(self):
@@ -104,7 +104,7 @@ class Lead(StatusUpdater):
 			return False
 
 		return frappe.db.get_value("Opportunity", {
-			"opportunity_from": "Lead", "party_name": self.name, "status": ["=", "Lost"]
+			"opportunity_from": "Lead", "party_name": self.name, "status": ["=", "Lost"],
 		})
 
 	def is_converted(self):
@@ -115,14 +115,14 @@ class Lead(StatusUpdater):
 			return False
 
 		return frappe.db.get_value("Opportunity", {
-			"opportunity_from": "Lead", "party_name": self.name, "status": ["=", "Converted"]
+			"opportunity_from": "Lead", "party_name": self.name, "status": ["=", "Converted"],
 		})
 
 
 @frappe.whitelist()
 def make_opportunity(source_name, target_doc=None):
 	def set_missing_values(source, target):
-		target.opportunity_from = 'Lead'
+		target.opportunity_from = "Lead"
 		target.run_method("set_missing_values")
 
 	target_doc = get_mapped_doc("Lead", source_name, {
@@ -130,8 +130,8 @@ def make_opportunity(source_name, target_doc=None):
 			"doctype": "Opportunity",
 			"field_map": {
 				"name": "party_name",
-			}
-		}
+			},
+		},
 	}, target_doc, set_missing_values)
 
 	return target_doc
@@ -152,10 +152,10 @@ def _get_lead_contact_details(lead, check_permissions=False):
 			lead.check_permission()
 
 	out = frappe._dict({
-		"contact_email": lead.get('email_id'),
-		"contact_mobile": lead.get('mobile_no'),
-		"contact_mobile_2": lead.get('mobile_no_2'),
-		"contact_phone": lead.get('phone'),
+		"contact_email": lead.get("email_id"),
+		"contact_mobile": lead.get("mobile_no"),
+		"contact_mobile_2": lead.get("mobile_no_2"),
+		"contact_phone": lead.get("phone"),
 	})
 
 	if cint(lead.organization_lead):
@@ -163,7 +163,7 @@ def _get_lead_contact_details(lead, check_permissions=False):
 		out["contact_designation"] = ""
 	else:
 		out["contact_display"] = " ".join(filter(None, [lead.get("salutation"), lead.get("lead_name")]))
-		out["contact_designation"] = lead.get('designation')
+		out["contact_designation"] = lead.get("designation")
 
 	return out
 
@@ -177,12 +177,12 @@ def get_lead_address_details(lead, check_permissions=False):
 		if check_permissions:
 			lead.check_permission()
 
-	lead_address_fields = ['address_line1', 'address_line2', 'city', 'state', 'country']
+	lead_address_fields = ["address_line1", "address_line2", "city", "state", "country"]
 	lead_address_details = frappe._dict()
 	for f in lead_address_fields:
 		lead_address_details[f] = lead.get(f)
 
-	if not lead_address_details.get('address_line1'):
+	if not lead_address_details.get("address_line1"):
 		lead_address_details = frappe._dict()
 
 	return lead_address_details
@@ -203,7 +203,7 @@ def make_lead_from_communication(communication, ignore_communication_links=False
 			"doctype": "Lead",
 			"lead_name": doc.sender_full_name,
 			"email_id": doc.sender,
-			"mobile_no": doc.phone_no
+			"mobile_no": doc.phone_no,
 		})
 		lead.flags.ignore_mandatory = True
 		lead.flags.ignore_permissions = True

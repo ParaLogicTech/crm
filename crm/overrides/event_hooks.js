@@ -4,16 +4,16 @@ frappe.provide("frappe.desk");
 
 frappe.ui.form.on("Event", {
 	refresh: function(frm) {
-		frm.set_query('reference_doctype', "event_participants", function() {
+		frm.set_query("reference_doctype", "event_participants", function() {
 			return {
 				"filters": {
-					"name": ["in", ["Contact", "Lead"]]
-				}
+					"name": ["in", ["Contact", "Lead"]],
+				},
 			};
 		});
 
-		frm.add_custom_button(__('Add Leads'), function() {
+		frm.add_custom_button(__("Add Leads"), function() {
 			new frappe.desk.eventParticipants(frm, "Lead");
 		}, __("Add Participants"));
-	}
+	},
 });

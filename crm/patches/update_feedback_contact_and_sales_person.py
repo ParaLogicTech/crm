@@ -1,6 +1,7 @@
 import frappe
-from crm.crm.utils import _get_contact_details
 from frappe.contacts.doctype.contact.contact import get_default_contact
+
+from crm.crm.utils import _get_contact_details
 
 user_to_sales_person = {}
 
@@ -10,17 +11,17 @@ def execute():
 		"Customer Feedback",
 		fields=["name", "feedback_from", "party_name", "contact_person"],
 		filters={
-			"feedback_from": ['is', 'set'],
-			"party_name": ['is', 'set'],
-			"contact_person": ['is', 'not set'],
-		}
+			"feedback_from": ["is", "set"],
+			"party_name": ["is", "set"],
+			"contact_person": ["is", "not set"],
+		},
 	)
 	feedbacks_for_sales_person = frappe.get_all(
 		"Customer Feedback",
 		fields=["name", "owner"],
 		filters={
-			"sales_person": ['is', 'not set'],
-		}
+			"sales_person": ["is", "not set"],
+		},
 	)
 
 	for fb in feedbacks_for_contact:
@@ -37,7 +38,7 @@ def execute():
 				"contact_display": contact_details.get("contact_display"),
 				"contact_mobile": contact_details.get("contact_mobile"),
 				"contact_phone": contact_details.get("contact_phone"),
-				"contact_email": contact_details.get("contact_email")
+				"contact_email": contact_details.get("contact_email"),
 			}, update_modified=False)
 
 	for fb in feedbacks_for_sales_person:

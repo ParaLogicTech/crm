@@ -1,12 +1,12 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2022, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
-import frappe
 import datetime
+
+import frappe
 from frappe import _
-from frappe.utils import getdate, combine_datetime, cint, get_datetime
 from frappe.model.document import Document
+from frappe.utils import cint, combine_datetime, get_datetime, getdate
 
 
 class AppointmentType(Document):
@@ -25,7 +25,7 @@ class AppointmentType(Document):
 				frappe.throw(_("Row #{0}: Slot Duration cannot be negative").format(d.idx))
 
 	def validate_number_of_agents(self):
-		if self.get('service_advisors'):
+		if self.get("service_advisors"):
 			self.number_of_agents = len(self.service_advisors)
 
 		if cint(self.number_of_agents) <= 0:
@@ -39,18 +39,18 @@ class AppointmentType(Document):
 
 			if not duration:
 				frappe.throw(_("Row #{0}: Duration cannot be 0, please set default duration or slot duration").format(
-					record.idx
+					record.idx,
 				))
 
 			if from_time > to_time:
 				frappe.throw(_("Row #{0}: <b>From Time</b> cannot be later than <b>To Time</b> on {1}").format(
-					record.idx, record.day_of_week
+					record.idx, record.day_of_week,
 				))
 
 			timedelta = to_time - from_time
 			if timedelta.total_seconds() % (duration * 60):
 				frappe.throw(_("Row #{0}: The difference between From Time and To Time must be a multiple of duration of {1} minutes").format(
-					record.idx, frappe.bold(duration)
+					record.idx, frappe.bold(duration),
 				))
 
 	def is_in_timeslot(self, start_dt, end_dt=None, duration=None):
@@ -70,7 +70,7 @@ class AppointmentType(Document):
 		if timeslot_range is None:
 			return True
 
-		for range_start, range_end, dur in timeslot_range:
+		for range_start, range_end, _dur in timeslot_range:
 			in_range = True
 			if not time_in_range(range_start, range_end, start_dt):
 				in_range = False
@@ -105,7 +105,7 @@ class AppointmentType(Document):
 		return timeslots
 
 	def get_timeslot_range(self, date):
-		if not self.get('availability_of_slots'):
+		if not self.get("availability_of_slots"):
 			return None
 
 		date = getdate(date)
@@ -130,7 +130,7 @@ class AppointmentType(Document):
 		timeslot_range = [(
 			combine_datetime(date, d.from_time),
 			combine_datetime(date, d.to_time),
-			cint(d.duration or self.appointment_duration)
+			cint(d.duration or self.appointment_duration),
 		) for d in timeslot_rows]
 
 		return timeslot_range

@@ -1,10 +1,10 @@
-frappe.listview_settings['Opportunity'] = {
+frappe.listview_settings["Opportunity"] = {
 	add_fields: ["customer_name", "opportunity_type", "opportunity_from", "status"],
 	get_indicator: function(doc) {
 		var indicator = [__(doc.status), frappe.utils.guess_colour(doc.status), "status,=," + doc.status];
-		if(doc.status == "Open") {
+		if (doc.status == "Open") {
 			indicator[1] = "orange";
-		} else if(doc.status == "Quotation") {
+		} else if (doc.status == "Quotation") {
 			indicator[1] = "blue";
 		} else if (["Converted", "Closed"].includes(doc.status)) {
 			indicator[1] = "green";
@@ -33,9 +33,9 @@ frappe.listview_settings['Opportunity'] = {
 				return {
 					"filters": {
 						"name": ["in", crm.utils.get_opportunity_allowed_party_types()],
-					}
+					},
 				};
 			};
 		}
-	}
+	},
 };

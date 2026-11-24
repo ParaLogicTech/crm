@@ -7,7 +7,7 @@ frappe.views.calendar["Opportunity"] = {
 		"end": "schedule_date",
 		"id": "name",
 		"title": "customer_name",
-		"allDay": "allDay"
+		"allDay": "allDay",
 	},
 	gantt: false,
 	get_events_method: "crm.crm.doctype.opportunity.opportunity.get_events",
@@ -23,5 +23,5 @@ frappe.views.calendar["Opportunity"] = {
 		} else if (doc.status == "Converted") {
 			return "success";
 		}
-	}
-}
+	},
+};

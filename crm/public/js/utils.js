@@ -1,36 +1,36 @@
 frappe.provide("crm.utils");
 
 $.extend(crm.utils, {
-	get_sales_person_from_user: function (callback) {
+	get_sales_person_from_user: function(callback) {
 		return frappe.call({
 			method: "crm.crm.doctype.sales_person.sales_person.get_sales_person_from_user",
-			callback: function (r) {
+			callback: function(r) {
 				if (!r.exc && callback) {
 					callback(r.message);
 				}
-			}
+			},
 		});
 	},
 
-	get_service_advisor_from_user: function (callback) {
+	get_service_advisor_from_user: function(callback) {
 		return frappe.call({
 			method: "crm.crm.doctype.sales_person.sales_person.get_service_advisor_from_user",
-			callback: function (r) {
+			callback: function(r) {
 				if (!r.exc && callback) {
 					callback(r.message);
 				}
-			}
+			},
 		});
 	},
 
-	get_advisor_sales_person_from_user: function (callback) {
+	get_advisor_sales_person_from_user: function(callback) {
 		return frappe.call({
 			method: "crm.crm.doctype.sales_person.sales_person.get_advisor_sales_person_from_user",
-			callback: function (r) {
+			callback: function(r) {
 				if (r.message && callback) {
 					callback(r.message);
 				}
-			}
+			},
 		});
 	},
 
@@ -51,7 +51,7 @@ $.extend(crm.utils, {
 				if (r.message) {
 					return frm.set_value(r.message);
 				}
-			}
+			},
 		});
 	},
 
@@ -66,19 +66,19 @@ $.extend(crm.utils, {
 			method: "crm.crm.utils.get_address_display",
 			args: {
 				address: frm.doc[address_field] || "",
-				lead: lead
+				lead: lead,
 			},
 			callback: function(r) {
 				if (!r.exc) {
 					frm.set_value(display_field, r.message);
 				}
-			}
-		})
+			},
+		});
 	},
 
-	get_lead_from_doc: function (frm, party_type_field) {
+	get_lead_from_doc: function(frm, party_type_field) {
 		if (frm.doc.party_name && frm.doc[party_type_field] === "Lead") {
-			return frm.doc.party_name
+			return frm.doc.party_name;
 		}
 	},
 
@@ -90,13 +90,13 @@ $.extend(crm.utils, {
 					"fieldtype": "Table MultiSelect",
 					"label": __("Lost Reasons"),
 					"fieldname": "lost_reason",
-					"options": 'Lost Reason Detail',
-					"reqd": 1
+					"options": "Lost Reason Detail",
+					"reqd": 1,
 				},
 				{
 					"fieldtype": "Text",
 					"label": __("Detailed Reason"),
-					"fieldname": "detailed_reason"
+					"fieldname": "detailed_reason",
 				},
 			],
 			primary_action: () => {
@@ -107,36 +107,36 @@ $.extend(crm.utils, {
 				crm.utils.update_lost_status(frm, true, reasons, detailed_reason);
 				dialog.hide();
 			},
-			primary_action_label: __('Declare Lost')
+			primary_action_label: __("Declare Lost"),
 		});
 
 		dialog.show();
 	},
 
-	update_lost_status: function(frm, is_lost, lost_reasons_list=null, detailed_reason=null) {
+	update_lost_status: function(frm, is_lost, lost_reasons_list = null, detailed_reason = null) {
 		return frappe.call({
 			doc: frm.doc,
 			method: "set_is_lost",
 			args: {
-				'is_lost': cint(is_lost),
-				'lost_reasons_list': lost_reasons_list,
-				'detailed_reason': detailed_reason
+				"is_lost": cint(is_lost),
+				"lost_reasons_list": lost_reasons_list,
+				"detailed_reason": detailed_reason,
 			},
 			callback: (r) => {
 				if (!r.exc) {
 					frm.reload_doc();
 				}
-			}
+			},
 		});
 	},
 
-	get_opportunity_allowed_party_types: function () {
+	get_opportunity_allowed_party_types: function() {
 		return frappe.boot.opportunity_allowed_party_types || ["Lead"];
 	},
-	get_appointment_allowed_party_types: function () {
+	get_appointment_allowed_party_types: function() {
 		return frappe.boot.appointment_allowed_party_types || ["Lead"];
 	},
-	get_feedback_allowed_party_types: function () {
+	get_feedback_allowed_party_types: function() {
 		return frappe.boot.feedback_allowed_party_types || ["Lead"];
 	},
 });

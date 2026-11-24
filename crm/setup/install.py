@@ -1,4 +1,5 @@
 import frappe
+
 from crm.setup.install_fixtures import create_default_records
 
 

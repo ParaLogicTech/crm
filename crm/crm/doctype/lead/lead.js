@@ -6,10 +6,10 @@ frappe.provide("crm");
 crm.LeadController = class LeadController extends frappe.ui.form.Controller {
 	setup() {
 		this.frm.custom_make_buttons = {
-			'Opportunity': 'Opportunity',
-		}
+			"Opportunity": "Opportunity",
+		};
 
-		this.frm.email_field = 'email_id';
+		this.frm.email_field = "email_id";
 	}
 
 	refresh() {
@@ -36,17 +36,17 @@ crm.LeadController = class LeadController extends frappe.ui.form.Controller {
 	}
 
 	set_dynamic_link() {
-		frappe.dynamic_link = {doc: this.frm.doc, fieldname: 'name', doctype: 'Lead'}
+		frappe.dynamic_link = {doc: this.frm.doc, fieldname: "name", doctype: "Lead"};
 	}
 
 	set_sales_person_from_user() {
-		if (!this.frm.get_field('sales_person') || this.frm.doc.sales_person || !this.frm.doc.__islocal) {
+		if (!this.frm.get_field("sales_person") || this.frm.doc.sales_person || !this.frm.doc.__islocal) {
 			return;
 		}
 
 		crm.utils.get_sales_person_from_user(sales_person => {
 			if (sales_person) {
-				this.frm.set_value('sales_person', sales_person);
+				this.frm.set_value("sales_person", sales_person);
 			}
 		});
 	}
@@ -54,15 +54,15 @@ crm.LeadController = class LeadController extends frappe.ui.form.Controller {
 	setup_buttons() {
 		if (!this.frm.doc.__islocal) {
 			this.frm.add_custom_button(__("Opportunity"), () => this.make_opportunity(),
-				__('Create'));
+				__("Create"));
 		}
 	}
 
 	make_opportunity() {
 		frappe.model.open_mapped_doc({
 			method: "crm.crm.doctype.lead.lead.make_opportunity",
-			frm: this.frm
-		})
+			frm: this.frm,
+		});
 	}
 
 	organization_lead() {
@@ -97,4 +97,4 @@ crm.LeadController = class LeadController extends frappe.ui.form.Controller {
 	}
 };
 
-extend_cscript(cur_frm.cscript, new crm.LeadController({ frm: cur_frm }));
+extend_cscript(cur_frm.cscript, new crm.LeadController({frm: cur_frm}));

@@ -159,7 +159,7 @@ class TestLead(CRMTestCase):
 
 	def test_make_lead_from_communication(self):
 		communication = make_communication(
-			sender="new.sender@example.com", sender_full_name="New Sender", phone_no="03009998877"
+			sender="new.sender@example.com", sender_full_name="New Sender", phone_no="03009998877",
 		)
 
 		lead_name = make_lead_from_communication(communication.name)
@@ -203,7 +203,7 @@ def make_opportunity_for_lead(lead_name, **kwargs):
 			"doctype": "Opportunity",
 			"opportunity_from": "Lead",
 			"party_name": lead_name,
-		}
+		},
 	)
 	opportunity.update(kwargs)
 	opportunity.insert()
@@ -219,7 +219,7 @@ def make_communication(**kwargs):
 			"sent_or_received": "Received",
 			"subject": "_Test Enquiry",
 			"content": "Please send me a quote",
-		}
+		},
 	)
 	communication.update(kwargs)
 	communication.insert(ignore_permissions=True)
