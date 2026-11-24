@@ -287,7 +287,7 @@ class Appointment(StatusUpdater):
 			return
 
 		if self.service_advisor and self.service_advisor != user_service_advisor:
-			frappe.throw(_("You are not allowed to select another {0}").format(self.meta.get_label("service_advisor")))
+			frappe.throw(_("You are not allowed to select another {0}").format(_(self.meta.get_label("service_advisor"))))
 
 	def validate_service_advisor_mandatory(self):
 		if not self.appointment_type:
@@ -301,7 +301,7 @@ class Appointment(StatusUpdater):
 
 		appointment_type_doc = frappe.get_cached_doc("Appointment Type", self.appointment_type)
 		if not self.service_advisor and appointment_type_doc.service_advisor_mandatory:
-			frappe.throw(_("{0} is mandatory for appointment confirmation").format(self.meta.get_label("service_advisor")))
+			frappe.throw(_("{0} is mandatory for appointment confirmation").format(_(self.meta.get_label("service_advisor"))))
 
 	def validate_service_advisor_availability(self):
 		appointment_type_doc = frappe.get_cached_doc("Appointment Type", self.appointment_type) \
@@ -313,7 +313,7 @@ class Appointment(StatusUpdater):
 			if allowed_service_advisors and self.service_advisor not in allowed_service_advisors:
 				frappe.msgprint(_("{0} is not a valid {1} for appointment type {2}").format(
 					frappe.bold(self.service_advisor),
-					self.meta.get_label("service_advisor"),
+					_(self.meta.get_label("service_advisor")),
 					self.appointment_type,
 				), raise_exception=appointment_type_doc.validate_service_advisor_availability)
 
@@ -326,7 +326,7 @@ class Appointment(StatusUpdater):
 				conflict_appointment = appointments_in_slot[0].name
 				timeslot_str = self.get_timeslot_str()
 				frappe.msgprint(_("{0} {1} is already assigned to another {2} for time slot {3}").format(
-					self.meta.get_label("service_advisor"),
+					_(self.meta.get_label("service_advisor")),
 					frappe.bold(self.service_advisor),
 					frappe.get_desk_link("Appointment", conflict_appointment),
 					timeslot_str,

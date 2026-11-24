@@ -163,7 +163,7 @@ def _get_lead_contact_details(lead, check_permissions=False):
 		out["contact_display"] = ""
 		out["contact_designation"] = ""
 	else:
-		out["contact_display"] = " ".join(filter(None, [lead.get("salutation"), lead.get("lead_name")]))
+		out["contact_display"] = " ".join(name for name in [lead.get("salutation"), lead.get("lead_name")] if name)
 		out["contact_designation"] = lead.get("designation")
 
 	return out

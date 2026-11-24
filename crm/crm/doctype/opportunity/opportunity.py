@@ -129,10 +129,10 @@ class Opportunity(StatusUpdater):
 
 		for d in self.get("contact_schedule"):
 			if not d.get("contact_date") and not d.get("schedule_date"):
-				frappe.throw(_("Row #{0}: Please set Contact or Schedule Date in follow up".format(d.idx)))
+				frappe.throw(_("Row #{0}: Please set Contact or Schedule Date in follow up").format(d.idx))
 
 			if d.is_new() and not d.get("contact_date") and getdate(d.get("schedule_date")) < getdate(today()):
-				frappe.throw(_("Row #{0}: Can't schedule a follow up for past dates".format(d.idx)))
+				frappe.throw(_("Row #{0}: Can't schedule a follow up for past dates").format(d.idx))
 
 	def get_next_follow_up_date(self):
 		pending_follow_ups = [d for d in self.get("contact_schedule") if d.schedule_date and not d.contact_date]
@@ -156,7 +156,7 @@ class Opportunity(StatusUpdater):
 		if dup:
 			dup = dup[0]
 			if (dup.to_discuss and to_discuss != dup.to_discuss) or (not dup.to_discuss and not to_discuss):
-				frappe.throw(_("Row #{0}: Follow Up already scheduled for {1}".format(dup.idx, frappe.format(dup.schedule_date))))
+				frappe.throw(_("Row #{0}: Follow Up already scheduled for {1}").format(dup.idx, frappe.format(dup.schedule_date)))
 			else:
 				dup.to_discuss = to_discuss
 		else:
