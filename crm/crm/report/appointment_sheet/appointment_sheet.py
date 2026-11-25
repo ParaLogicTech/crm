@@ -132,12 +132,12 @@ class AppointmentSheetReport:
 			conditions.append("a.appointment_type = %(appointment_type)s")
 
 		if self.filters.get("service_advisor"):
-			lft, rgt = frappe.db.get_value("Sales Person", self.filters.service_advisor, ["lft", "rgt"])
+			lft, rgt = frappe.db.get_value("Sales Person", self.filters.service_advisor, ["lft", "rgt"]) or (0, 0)
 			conditions.append("""a.service_advisor in (select name from `tabSales Person`
 				where lft >= {0} and rgt <= {1})""".format(lft, rgt))
 
 		if self.filters.get("sales_person"):
-			lft, rgt = frappe.db.get_value("Sales Person", self.filters.sales_person, ["lft", "rgt"])
+			lft, rgt = frappe.db.get_value("Sales Person", self.filters.sales_person, ["lft", "rgt"]) or (0, 0)
 			conditions.append("""a.sales_person in (select name from `tabSales Person`
 				where lft >= {0} and rgt <= {1})""".format(lft, rgt))
 
