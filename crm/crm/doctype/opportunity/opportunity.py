@@ -387,7 +387,7 @@ def trigger_recall_lost_opportunities():
 	from frappe.email.doctype.notification.notification import has_notification
 	if not has_notification(
 		"Opportunity",
-		notification_type="Recall Lost Opportunity",
+		notification_key="Recall Lost Opportunity",
 		trigger_method="notify_recall_lost_opportunity",
 	):
 		return
