@@ -132,6 +132,18 @@ class TestAppointment(CRMTestCase):
 			{("Lead", appointment.party_name), ("Sales Person", advisor.name)},
 		)
 
+	def test_sync_calendar_event(self):
+		appointment_type = make_appointment_type(create_calendar_event=1)
+		appointment = make_appointment(appointment_type=appointment_type.name, submit=True)
+
+		appointment.scheduled_dt = get_dt(add_days(nowdate(), 3), "14:00")
+		appointment.end_dt = get_dt(add_days(nowdate(), 3), "14:30")
+		appointment.sync_calendar_event()
+
+		event = frappe.get_doc("Event", appointment.calendar_event)
+		self.assertEqual(event.starts_on, appointment.scheduled_dt)
+		self.assertEqual(event.ends_on, appointment.end_dt)
+
 	def test_no_calendar_event(self):
 		appointment = make_appointment(submit=True)
 		self.assertFalse(appointment.calendar_event)
