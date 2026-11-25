@@ -11,6 +11,7 @@ from frappe.model.document import Document
 from frappe.model.mapper import get_mapped_doc
 from frappe.rate_limiter import rate_limit
 from frappe.utils import add_days, cint, clean_whitespace, comma_or, cstr, getdate, today, validate_email_address
+from frappe.utils.data import cast
 from frappe.utils.status_updater import StatusUpdater
 
 from crm.crm.doctype.sales_person.sales_person import get_sales_person_from_user
@@ -592,12 +593,13 @@ def make_opportunity_from_lead_form(
 	opportunity_args: str | dict | None = None,
 ):
 	# Forward Email Message
-	from frappe.www.contact import process_contact_message
+	from frappe.www.contact import get_contact_message_context, get_contact_message_html, process_contact_message
 
 	if not sender:
 		frappe.throw(_("Please enter your email address"))
 
 	sender = validate_email_address(sender, throw=True)
+	subject = subject or "Website Query"
 
 	if opportunity_args and isinstance(opportunity_args, str):
 		opportunity_args = json.loads(opportunity_args)
@@ -606,6 +608,7 @@ def make_opportunity_from_lead_form(
 	forward_message_args = {
 		"full_name": full_name,
 		"organization": organization,
+		"designation": designation,
 		"mobile_no": mobile_no,
 		"phone_no": phone_no,
 		"country": country,
@@ -641,27 +644,28 @@ def make_opportunity_from_lead_form(
 		new_lead.insert(ignore_permissions=True)
 		lead = new_lead.name
 	else:
+		# Anyone can submit the form with an existing lead's email, so only fill in details the lead doesn't have.
+		# The submitted details are still kept in the forwarded email and the Communication.
 		old_lead = frappe.get_doc("Lead", lead)
 		old_lead_changed = False
-		if full_name:
-			old_lead.lead_name = full_name or sender.split("@")[0].title()
-			old_lead_changed = True
-		if organization:
-			old_lead.company_name = organization
-			old_lead_changed = True
-		if phone_no:
-			old_lead.phone = phone_no
-			old_lead_changed = True
-		if designation:
-			old_lead.designation = designation
-			old_lead_changed = True
+		submitted_details = {
+			"lead_name": full_name,
+			"company_name": organization,
+			"phone": phone_no,
+			"designation": designation,
+		}
+		for fieldname, value in submitted_details.items():
+			if value and not old_lead.get(fieldname):
+				old_lead.set(fieldname, value)
+				old_lead_changed = True
 
-		# Set current number as primary and set old as secondary
-		if mobile_no and old_lead.mobile_no != mobile_no:
-			if old_lead.mobile_no:
-				old_lead.mobile_no_2 = old_lead.mobile_no
-			old_lead.mobile_no = mobile_no
-			old_lead_changed = True
+		if mobile_no and mobile_no not in (old_lead.mobile_no, old_lead.mobile_no_2):
+			if not old_lead.mobile_no:
+				old_lead.mobile_no = mobile_no
+				old_lead_changed = True
+			elif not old_lead.mobile_no_2:
+				old_lead.mobile_no_2 = mobile_no
+				old_lead_changed = True
 
 		if old_lead_changed:
 			old_lead.flags.ignore_mandatory = True
@@ -670,9 +674,16 @@ def make_opportunity_from_lead_form(
 	# Create Opportunity
 	opportunity = frappe.new_doc("Opportunity")
 
-	for k, v in opportunity_args.items():
-		if opportunity.meta.has_field(k):
-			opportunity.set(k, v)
+	# Guests can send any key, so only set the fields that apps list in the allowed_lead_form_opportunity_fields hook
+	allowed_fields = frappe.get_hooks("allowed_lead_form_opportunity_fields")
+	for fieldname, value in opportunity_args.items():
+		df = opportunity.meta.get_field(fieldname)
+		if fieldname not in allowed_fields or not df:
+			continue
+
+		value = get_lead_form_opportunity_value(df, value)
+		if value is not None:
+			opportunity.set(fieldname, value)
 
 	opportunity.update({
 		"opportunity_from": "Lead",
@@ -694,8 +705,10 @@ def make_opportunity_from_lead_form(
 	comm = frappe.get_doc({
 		"doctype": "Communication",
 		"subject": subject,
-		"content": message,
+		"content": get_contact_message_html(get_contact_message_context(sender, subject, message, forward_message_args)),
 		"sender": sender,
+		"sender_full_name": full_name,
+		"phone_no": mobile_no or phone_no,
 		"sent_or_received": "Received",
 		"reference_doctype": "Opportunity",
 		"reference_name": opportunity.name,
@@ -706,6 +719,29 @@ def make_opportunity_from_lead_form(
 	comm.insert(ignore_permissions=True)
 
 	return "okay"
+
+
+def get_lead_form_opportunity_value(df, value):
+	# Values come from guests: return None for one that can't be set, rather than failing the whole submission
+	if value in (None, "") or isinstance(value, dict | list):
+		return None
+
+	try:
+		value = cast(df.fieldtype, value)
+	except frappe.ValidationError:
+		# getdate reports an invalid date with an error message for the visitor
+		frappe.clear_last_message()
+		return None
+	except Exception:
+		return None
+
+	if df.fieldtype == "Link" and (not value or not frappe.db.exists(df.options, value)):
+		return None
+
+	if df.fieldtype == "Select" and value not in (df.options or "").split("\n"):
+		return None
+
+	return value
 
 
 def get_opportunity_type_from_query_option(option):
