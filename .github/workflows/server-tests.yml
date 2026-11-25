@@ -92,6 +92,44 @@ jobs:
       - name: Install System Dependencies
         run: sudo apt-get update && sudo apt-get install -y redis-server mariadb-client
 
+      # A PR that needs an unmerged frappe change names it in its description: "Depends on ParaLogicTech/frappe#123".
+      # The description is read when the job runs (not from the event), so a re-run picks up an edited description.
+      # Once the frappe PR is merged, its branch may be deleted, so version-15 is used again.
+      - name: Find Frappe Branch
+        id: frappe
+        run: |
+          repo="${INPUT_REPO:-ParaLogicTech/frappe}"
+          branch="${INPUT_BRANCH:-version-15}"
+
+          if [ -n "${PR_NUMBER}" ]; then
+            body=$(gh api "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}" --jq ".body // \"\"")
+            frappe_pr=$(grep -ioE "depends on ParaLogicTech/frappe#[0-9]+" <<< "${body}" | head -n 1 | grep -oE "[0-9]+$" || true)
+
+            if [ -n "${frappe_pr}" ]; then
+              read -r merged head_repo head_ref < <(gh api "repos/ParaLogicTech/frappe/pulls/${frappe_pr}" \
+                --jq "[.merged, .head.repo.full_name // \"\", .head.ref] | @tsv")
+
+              if [ "${merged}" = "true" ]; then
+                echo "ParaLogicTech/frappe#${frappe_pr} is merged, using ${repo}@${branch}"
+              elif [ -z "${head_repo}" ]; then
+                echo "::error::The head repository of ParaLogicTech/frappe#${frappe_pr} no longer exists"
+                exit 1
+              else
+                repo="${head_repo}"
+                branch="${head_ref}"
+              fi
+            fi
+          fi
+
+          echo "Testing against ${repo}@${branch}"
+          echo "repo=${repo}" >> "${GITHUB_OUTPUT}"
+          echo "branch=${branch}" >> "${GITHUB_OUTPUT}"
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          INPUT_REPO: ${{ inputs.frappe_repo }}
+          INPUT_BRANCH: ${{ inputs.frappe_branch }}
+
       # crm depends on ParaLogic's frappe fork, not stock frappe
       - name: Setup Bench
         run: |
@@ -101,8 +139,8 @@ jobs:
           mariadb --host 127.0.0.1 --port 3306 -u root -proot -e "SET GLOBAL character_set_server = 'utf8mb4'"
           mariadb --host 127.0.0.1 --port 3306 -u root -proot -e "SET GLOBAL collation_server = 'utf8mb4_unicode_ci'"
         env:
-          FRAPPE_REPO: ${{ inputs.frappe_repo || 'ParaLogicTech/frappe' }}
-          FRAPPE_BRANCH: ${{ inputs.frappe_branch || 'version-15' }}
+          FRAPPE_REPO: ${{ steps.frappe.outputs.repo }}
+          FRAPPE_BRANCH: ${{ steps.frappe.outputs.branch }}
 
       - name: Install
         working-directory: /home/runner/frappe-bench
