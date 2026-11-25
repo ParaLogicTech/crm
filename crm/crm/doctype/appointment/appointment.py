@@ -419,7 +419,7 @@ class Appointment(StatusUpdater):
 
 		cal_event = frappe.get_doc("Event", self.calendar_event)
 		cal_event.starts_on = self.scheduled_dt
-		cal_event.end_on = self.end_dt
+		cal_event.ends_on = self.end_dt
 		cal_event.save(ignore_permissions=True)
 
 	def set_status(self, update=False, status=None, update_modified=True):
