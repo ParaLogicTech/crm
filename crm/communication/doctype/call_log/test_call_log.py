@@ -4,9 +4,11 @@
 from unittest.mock import patch
 
 import frappe
+from frappe.utils import add_days, now_datetime
 
 from crm.communication.doctype.call_log.call_log import add_call_summary
 from crm.crm.doctype.lead.test_lead import make_lead
+from crm.crm.utils import get_last_interaction
 from crm.tests.utils import CRMTestCase
 
 # Links to ERPNext DocTypes, which don't exist on a site with only crm
@@ -118,6 +120,21 @@ class TestCallLog(CRMTestCase):
 		self.assertEqual(len(comment), 1)
 		self.assertIn("Customer wants a callback", comment[0])
 
+	def test_last_interaction_is_newest_communication(self):
+		lead = make_lead()
+		contact = make_contact("03001112277")
+		contact.append("links", {"link_doctype": "Lead", "link_name": lead.name})
+		contact.save()
+
+		older = make_received_communication("Lead", lead.name)
+		newer = make_received_communication("Lead", lead.name)
+		yesterday = add_days(now_datetime(), -1)
+		frappe.db.set_value("Communication", older, {"creation": yesterday, "modified": yesterday}, update_modified=False)
+
+		for kwargs in ({"lead": lead.name}, {"contact": contact.name}):
+			with self.subTest(**kwargs):
+				self.assertEqual(get_last_interaction(**kwargs)["last_communication"].name, newer)
+
 	def test_disconnect_event(self):
 		call_log = make_call_log(status="Ringing")
 		popup_users = {"agent1@example.com", "agent2@example.com"}
@@ -186,6 +203,20 @@ def make_call_log(**kwargs):
 	call_log.update(kwargs)
 	call_log.insert()
 	return call_log
+
+
+def make_received_communication(reference_doctype, reference_name):
+	return frappe.get_doc(
+		{
+			"doctype": "Communication",
+			"communication_type": "Communication",
+			"sent_or_received": "Received",
+			"subject": "_Test Message",
+			"content": "_Test Message",
+			"reference_doctype": reference_doctype,
+			"reference_name": reference_name,
+		},
+	).insert().name
 
 
 def make_contact(phone, first_name="_Test Caller"):

@@ -20,7 +20,7 @@ frappe.ui.form.on("Territory", {
 	set_root_readonly(frm) {
 		// read-only for root territory
 		if (!frm.doc.parent_territory && !frm.doc.__islocal) {
-			frm.set_read_only();
+			frm.disable_form();
 			frm.set_intro(__("This is a root territory and cannot be edited."));
 		} else {
 			frm.set_intro(null);
