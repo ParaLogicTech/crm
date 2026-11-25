@@ -2,6 +2,7 @@
 # License: GNU General Public License v3. See license.txt
 
 import json
+from datetime import date
 
 import frappe
 from frappe import _
@@ -10,6 +11,7 @@ from frappe.model.document import Document
 from frappe.model.mapper import get_mapped_doc
 from frappe.rate_limiter import rate_limit
 from frappe.utils import add_days, cint, clean_whitespace, comma_or, cstr, getdate, today, validate_email_address
+from frappe.utils.data import cast
 from frappe.utils.status_updater import StatusUpdater
 
 from crm.crm.doctype.sales_person.sales_person import get_sales_person_from_user
@@ -128,10 +130,10 @@ class Opportunity(StatusUpdater):
 
 		for d in self.get("contact_schedule"):
 			if not d.get("contact_date") and not d.get("schedule_date"):
-				frappe.throw(_("Row #{0}: Please set Contact or Schedule Date in follow up".format(d.idx)))
+				frappe.throw(_("Row #{0}: Please set Contact or Schedule Date in follow up").format(d.idx))
 
 			if d.is_new() and not d.get("contact_date") and getdate(d.get("schedule_date")) < getdate(today()):
-				frappe.throw(_("Row #{0}: Can't schedule a follow up for past dates".format(d.idx)))
+				frappe.throw(_("Row #{0}: Can't schedule a follow up for past dates").format(d.idx))
 
 	def get_next_follow_up_date(self):
 		pending_follow_ups = [d for d in self.get("contact_schedule") if d.schedule_date and not d.contact_date]
@@ -155,7 +157,7 @@ class Opportunity(StatusUpdater):
 		if dup:
 			dup = dup[0]
 			if (dup.to_discuss and to_discuss != dup.to_discuss) or (not dup.to_discuss and not to_discuss):
-				frappe.throw(_("Row #{0}: Follow Up already scheduled for {1}".format(dup.idx, frappe.format(dup.schedule_date))))
+				frappe.throw(_("Row #{0}: Follow Up already scheduled for {1}").format(dup.idx, frappe.format(dup.schedule_date)))
 			else:
 				dup.to_discuss = to_discuss
 		else:
@@ -172,7 +174,13 @@ class Opportunity(StatusUpdater):
 			return follow_up[0]
 
 	@frappe.whitelist()
-	def set_is_lost(self, is_lost, lost_reasons_list=None, detailed_reason=None, lost_date=None):
+	def set_is_lost(
+		self,
+		is_lost: bool,
+		lost_reasons_list: list | None = None,
+		detailed_reason: str | None = None,
+		lost_date: str | date | None = None,
+	):
 		is_lost = cint(is_lost)
 
 		if is_lost and self.is_converted():
@@ -245,7 +253,7 @@ class Opportunity(StatusUpdater):
 
 
 @frappe.whitelist()
-def get_customer_details(args):
+def get_customer_details(args: str | dict):
 	from frappe.model.base_document import get_controller
 
 	if isinstance(args, str):
@@ -302,7 +310,7 @@ def get_customer_details(args):
 
 
 @frappe.whitelist()
-def make_appointment(source_name, target_doc=None):
+def make_appointment(source_name: str, target_doc: str | Document | None = None):
 	def set_missing_values(source, target):
 		default_appointment_type = frappe.get_cached_value("Opportunity Type", source.opportunity_type, "default_appointment_type")
 		if default_appointment_type:
@@ -333,7 +341,7 @@ def make_appointment(source_name, target_doc=None):
 
 
 @frappe.whitelist()
-def set_multiple_status(names, status):
+def set_multiple_status(names: str, status: str):
 	names = json.loads(names)
 	for name in names:
 		opp = frappe.get_doc("Opportunity", name)
@@ -412,7 +420,7 @@ def trigger_recall_lost_opportunities():
 
 
 @frappe.whitelist()
-def schedule_follow_up(name, schedule_date, to_discuss=None):
+def schedule_follow_up(name: str, schedule_date: str | date | None, to_discuss: str | None = None):
 	if not schedule_date:
 		frappe.throw(_("Schedule Date is mandatory"))
 
@@ -426,7 +434,13 @@ def schedule_follow_up(name, schedule_date, to_discuss=None):
 
 
 @frappe.whitelist()
-def submit_communication_with_action(remarks, action, opportunity, follow_up_date=None, lost_reason=None):
+def submit_communication_with_action(
+	remarks: str,
+	action: str,
+	opportunity: str | Document,
+	follow_up_date: str | date | None = None,
+	lost_reason: str | None = None,
+):
 	contact_date = getdate()
 	remarks = clean_whitespace(remarks)
 
@@ -477,7 +491,7 @@ def submit_communication_with_action(remarks, action, opportunity, follow_up_dat
 
 
 @frappe.whitelist()
-def submit_communication(opportunity, contact_date, remarks, update_follow_up=True):
+def submit_communication(opportunity: str | Document, contact_date: str | date, remarks: str, update_follow_up: bool = True):
 	from frappe.model.document import Document
 
 	if not remarks:
@@ -517,7 +531,7 @@ def submit_communication(opportunity, contact_date, remarks, update_follow_up=Tr
 
 
 @frappe.whitelist()
-def get_events(start, end, filters=None):
+def get_events(start: str, end: str, filters: str | list | None = None):
 	from frappe.desk.calendar import get_event_conditions
 	conditions = get_event_conditions("Opportunity", filters)
 
@@ -543,7 +557,7 @@ def get_events(start, end, filters=None):
 
 
 @frappe.whitelist()
-def create_opportunity_from_communication(communication, ignore_communication_links=False):
+def create_opportunity_from_communication(communication: str, ignore_communication_links: bool = False):
 	from crm.crm.doctype.lead.lead import make_lead_from_communication
 	doc = frappe.get_doc("Communication", communication)
 
@@ -567,30 +581,34 @@ def create_opportunity_from_communication(communication, ignore_communication_li
 @frappe.whitelist(allow_guest=True, methods=["POST"])
 @rate_limit(limit=100, seconds=60 * 60)
 def make_opportunity_from_lead_form(
-	sender,
-	message="",
-	subject="Website Query",
-	full_name="",
-	organization="",
-	designation="",
-	mobile_no="",
-	phone_no="",
-	country="",
-	opportunity_args=None,
+	sender: str | None,
+	message: str | None = "",
+	subject: str | None = "Website Query",
+	full_name: str | None = "",
+	organization: str | None = "",
+	designation: str | None = "",
+	mobile_no: str | None = "",
+	phone_no: str | None = "",
+	country: str | None = "",
+	opportunity_args: str | dict | None = None,
 ):
 	# Forward Email Message
-	from frappe.www.contact import process_contact_message
+	from frappe.www.contact import get_contact_message_context, get_contact_message_html, process_contact_message
 
 	if not sender:
 		frappe.throw(_("Please enter your email address"))
 
 	sender = validate_email_address(sender, throw=True)
+	subject = subject or "Website Query"
 
-	opportunity_args = json.loads(opportunity_args) if opportunity_args else {}
+	if opportunity_args and isinstance(opportunity_args, str):
+		opportunity_args = json.loads(opportunity_args)
+	opportunity_args = opportunity_args or {}
 
 	forward_message_args = {
 		"full_name": full_name,
 		"organization": organization,
+		"designation": designation,
 		"mobile_no": mobile_no,
 		"phone_no": phone_no,
 		"country": country,
@@ -626,27 +644,28 @@ def make_opportunity_from_lead_form(
 		new_lead.insert(ignore_permissions=True)
 		lead = new_lead.name
 	else:
+		# Anyone can submit the form with an existing lead's email, so only fill in details the lead doesn't have.
+		# The submitted details are still kept in the forwarded email and the Communication.
 		old_lead = frappe.get_doc("Lead", lead)
 		old_lead_changed = False
-		if full_name:
-			old_lead.lead_name = full_name or sender.split("@")[0].title()
-			old_lead_changed = True
-		if organization:
-			old_lead.company_name = organization
-			old_lead_changed = True
-		if phone_no:
-			old_lead.phone = phone_no
-			old_lead_changed = True
-		if designation:
-			old_lead.designation = designation
-			old_lead_changed = True
+		submitted_details = {
+			"lead_name": full_name,
+			"company_name": organization,
+			"phone": phone_no,
+			"designation": designation,
+		}
+		for fieldname, value in submitted_details.items():
+			if value and not old_lead.get(fieldname):
+				old_lead.set(fieldname, value)
+				old_lead_changed = True
 
-		# Set current number as primary and set old as secondary
-		if mobile_no and old_lead.mobile_no != mobile_no:
-			if old_lead.mobile_no:
-				old_lead.mobile_no_2 = old_lead.mobile_no
-			old_lead.mobile_no = mobile_no
-			old_lead_changed = True
+		if mobile_no and mobile_no not in (old_lead.mobile_no, old_lead.mobile_no_2):
+			if not old_lead.mobile_no:
+				old_lead.mobile_no = mobile_no
+				old_lead_changed = True
+			elif not old_lead.mobile_no_2:
+				old_lead.mobile_no_2 = mobile_no
+				old_lead_changed = True
 
 		if old_lead_changed:
 			old_lead.flags.ignore_mandatory = True
@@ -655,9 +674,16 @@ def make_opportunity_from_lead_form(
 	# Create Opportunity
 	opportunity = frappe.new_doc("Opportunity")
 
-	for k, v in opportunity_args.items():
-		if opportunity.meta.has_field(k):
-			opportunity.set(k, v)
+	# Guests can send any key, so only set the fields that apps list in the allowed_lead_form_opportunity_fields hook
+	allowed_fields = frappe.get_hooks("allowed_lead_form_opportunity_fields")
+	for fieldname, value in opportunity_args.items():
+		df = opportunity.meta.get_field(fieldname)
+		if fieldname not in allowed_fields or not df:
+			continue
+
+		value = get_lead_form_opportunity_value(df, value)
+		if value is not None:
+			opportunity.set(fieldname, value)
 
 	opportunity.update({
 		"opportunity_from": "Lead",
@@ -679,8 +705,10 @@ def make_opportunity_from_lead_form(
 	comm = frappe.get_doc({
 		"doctype": "Communication",
 		"subject": subject,
-		"content": message,
+		"content": get_contact_message_html(get_contact_message_context(sender, subject, message, forward_message_args)),
 		"sender": sender,
+		"sender_full_name": full_name,
+		"phone_no": mobile_no or phone_no,
 		"sent_or_received": "Received",
 		"reference_doctype": "Opportunity",
 		"reference_name": opportunity.name,
@@ -691,6 +719,29 @@ def make_opportunity_from_lead_form(
 	comm.insert(ignore_permissions=True)
 
 	return "okay"
+
+
+def get_lead_form_opportunity_value(df, value):
+	# Values come from guests: return None for one that can't be set, rather than failing the whole submission
+	if value in (None, "") or isinstance(value, dict | list):
+		return None
+
+	try:
+		value = cast(df.fieldtype, value)
+	except frappe.ValidationError:
+		# getdate reports an invalid date with an error message for the visitor
+		frappe.clear_last_message()
+		return None
+	except Exception:
+		return None
+
+	if df.fieldtype == "Link" and (not value or not frappe.db.exists(df.options, value)):
+		return None
+
+	if df.fieldtype == "Select" and value not in (df.options or "").split("\n"):
+		return None
+
+	return value
 
 
 def get_opportunity_type_from_query_option(option):

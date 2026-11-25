@@ -1,26 +1,29 @@
 // Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 // License: GNU General Public License v3. See license.txt
 
-cur_frm.cscript.refresh = function(doc, cdt, cdn) {
-	cur_frm.cscript.set_root_readonly(doc);
-};
+frappe.ui.form.on("Sales Person", {
+	setup(frm) {
+		frm.set_query("parent_sales_person", () => {
+			return {
+				filters: [
+					["Sales Person", "is_group", "=", 1],
+					["Sales Person", "name", "!=", frm.doc.sales_person_name],
+				],
+			};
+		});
+	},
 
-cur_frm.cscript.set_root_readonly = function(doc) {
-	// read-only for root
-	if (!doc.parent_sales_person && !doc.__islocal) {
-		cur_frm.set_read_only();
-		cur_frm.set_intro(__("This is a root sales person and cannot be edited."));
-	} else {
-		cur_frm.set_intro(null);
-	}
-};
+	refresh(frm) {
+		frm.events.set_root_readonly(frm);
+	},
 
-//get query select sales person
-cur_frm.fields_dict["parent_sales_person"].get_query = function(doc, cdt, cdn) {
-	return {
-		filters: [
-			["Sales Person", "is_group", "=", 1],
-			["Sales Person", "name", "!=", doc.sales_person_name],
-		],
-	};
-};
+	set_root_readonly(frm) {
+		// read-only for root sales person
+		if (!frm.doc.parent_sales_person && !frm.doc.__islocal) {
+			frm.set_read_only();
+			frm.set_intro(__("This is a root sales person and cannot be edited."));
+		} else {
+			frm.set_intro(null);
+		}
+	},
+});

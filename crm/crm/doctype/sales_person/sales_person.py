@@ -37,13 +37,13 @@ def on_doctype_update():
 
 
 @frappe.whitelist()
-def get_service_advisor_from_user(user=None):
+def get_service_advisor_from_user(user: str | None = None):
 	details = get_advisor_sales_person_from_user(user)
 	return details.sales_person if details.is_service_advisor else None
 
 
 @frappe.whitelist()
-def get_advisor_sales_person_from_user(user=None):
+def get_advisor_sales_person_from_user(user: str | None = None):
 	out = frappe._dict({
 		"sales_person": get_sales_person_from_user(user),
 		"is_service_advisor": 0,
@@ -56,6 +56,6 @@ def get_advisor_sales_person_from_user(user=None):
 
 
 @frappe.whitelist()
-def get_sales_person_from_user(user=None):
+def get_sales_person_from_user(user: str | None = None):
 	user = user or frappe.session.user
 	return frappe.db.get_value("Sales Person", {"user_id": user, "enabled": 1})

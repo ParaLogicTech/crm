@@ -2,19 +2,20 @@
 # For license information, please see license.txt
 
 import frappe
+from frappe import _
 
 
 def execute(filters=None):
 	columns = [
 		{
 			"fieldname": "creation_date",
-			"label": "Date",
+			"label": _("Date"),
 			"fieldtype": "Date",
 		},
 		{
 			"fieldname": "mins",
 			"fieldtype": "Float",
-			"label": "Mins to First Response",
+			"label": _("Mins to First Response"),
 		},
 	]
 

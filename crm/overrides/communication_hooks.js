@@ -7,16 +7,15 @@ frappe.ui.form.on("Communication", {
 	},
 
 	setup_crm_buttons: (frm) => {
-		let confirm_msg = "Are you sure you want to create {0} from this email?";
-		if (!in_list(["Lead", "Opportunity"], frm.doc.reference_doctype)) {
+		if (!["Lead", "Opportunity"].includes(frm.doc.reference_doctype)) {
 			frm.add_custom_button(__("Lead"), () => {
-				frappe.confirm(__(confirm_msg, [__("Lead")]), () => {
+				frappe.confirm(__("Are you sure you want to create {0} from this email?", [__("Lead")]), () => {
 					frm.trigger("make_lead_from_communication");
 				});
 			}, __("Create"));
 
 			frm.add_custom_button(__("Opportunity"), () => {
-				frappe.confirm(__(confirm_msg, [__("Opportunity")]), () => {
+				frappe.confirm(__("Are you sure you want to create {0} from this email?", [__("Opportunity")]), () => {
 					frm.trigger("create_opportunity_from_communication");
 				});
 			}, __("Create"));

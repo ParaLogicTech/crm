@@ -65,6 +65,8 @@ scheduler_events = {
 	],
 }
 
+allowed_lead_form_opportunity_fields = ["source", "campaign", "information_source"]
+
 standard_queries = {
 	"Lead": "crm.queries.lead_query",
 }

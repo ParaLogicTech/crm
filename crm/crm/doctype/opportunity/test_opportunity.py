@@ -5,7 +5,7 @@ import json
 from unittest.mock import patch
 
 import frappe
-from frappe.tests.utils import change_settings
+from frappe.tests.utils import change_settings, patch_hooks
 from frappe.utils import add_days, getdate, now_datetime, nowdate
 
 from crm.crm.doctype.lead.test_lead import make_communication, make_lead
@@ -477,6 +477,23 @@ class TestOpportunityLeadForm(CRMTestCase):
 		communication = get_last_communication(opportunity.name)
 		self.assertEqual(communication.sender, sender)
 		self.assertEqual(communication.subject, "Price Enquiry")
+		self.assertEqual(communication.sender_full_name, "Web Visitor")
+		self.assertEqual(communication.phone_no, "03005556666")
+		self.assertIn("<b>Full Name:</b> Web Visitor", communication.content)
+		self.assertIn("<b>Organization:</b> Visitor Co", communication.content)
+		self.assertIn("<b>Designation:</b> CEO", communication.content)
+		self.assertIn("<b>Message:</b> I want a quote", communication.content)
+		self.assertEqual([(d.link_doctype, d.link_name) for d in communication.timeline_links], [("Lead", lead.name)])
+		self.assertEqual(frappe.db.count("Communication", {"sender": sender}), 1)
+
+	def test_default_subject(self):
+		for subject in ("", None):
+			sender = make_email()
+			submit_lead_form(sender=sender, subject=subject)
+
+			lead = frappe.db.get_value("Lead", {"email_id": sender})
+			opportunity = frappe.db.get_value("Opportunity", {"party_name": lead})
+			self.assertEqual(get_last_communication(opportunity).subject, "Website Query")
 
 	def test_lead_name_from_email(self):
 		sender = make_email("jane.doe")
@@ -489,8 +506,8 @@ class TestOpportunityLeadForm(CRMTestCase):
 		self.assertRaises(frappe.ValidationError, submit_lead_form, sender="")
 		self.assertRaises(frappe.InvalidEmailAddressError, submit_lead_form, sender="not-an-email")
 
-	def test_existing_lead_is_updated(self):
-		lead = make_lead(lead_name="Old Name", email_id=make_email(), mobile_no="03001110000")
+	def test_existing_lead_details_are_not_overwritten(self):
+		lead = make_lead(lead_name="Old Name", company_name="Old Co", email_id=make_email(), mobile_no="03001110000")
 
 		submit_lead_form(
 			sender=lead.email_id,
@@ -502,14 +519,23 @@ class TestOpportunityLeadForm(CRMTestCase):
 		)
 
 		lead.reload()
-		self.assertEqual(lead.lead_name, "New Name")
-		self.assertEqual(lead.company_name, "New Co")
+		self.assertEqual(lead.lead_name, "Old Name")
+		self.assertEqual(lead.company_name, "Old Co")
 		self.assertEqual(lead.designation, "Manager")
 		self.assertEqual(lead.phone, "0421112222")
-		self.assertEqual(lead.mobile_no, "03002220000")
-		self.assertEqual(lead.mobile_no_2, "03001110000")
+		self.assertEqual(lead.mobile_no, "03001110000")
+		self.assertEqual(lead.mobile_no_2, "03002220000")
 		self.assertEqual(frappe.db.count("Lead", {"email_id": lead.email_id}), 1)
 		self.assertEqual(frappe.db.count("Opportunity", {"party_name": lead.name}), 1)
+
+	def test_existing_lead_with_both_mobile_nos(self):
+		lead = make_lead(email_id=make_email(), mobile_no="03001110000", mobile_no_2="03001110001")
+
+		submit_lead_form(sender=lead.email_id, mobile_no="03002220000")
+
+		lead.reload()
+		self.assertEqual(lead.mobile_no, "03001110000")
+		self.assertEqual(lead.mobile_no_2, "03001110001")
 
 	def test_existing_lead_without_mobile_no(self):
 		lead = make_lead(email_id=make_email())
@@ -554,20 +580,79 @@ class TestOpportunityLeadForm(CRMTestCase):
 
 	def test_opportunity_args(self):
 		sender = make_email()
+		with patch_hooks({"allowed_lead_form_opportunity_fields": ["lead_classification"]}):
+			submit_lead_form(
+				sender=sender,
+				opportunity_args=json.dumps(
+					{
+						"lead_classification": "Hot",
+						"sales_person": "_Test Not Allowed",
+						"not_a_field": "ignored",
+					},
+				),
+			)
+
+		lead = frappe.db.get_value("Lead", {"email_id": sender})
+		opportunity = frappe.db.get_value(
+			"Opportunity", {"party_name": lead}, ["lead_classification", "sales_person"], as_dict=True,
+		)
+		self.assertEqual(opportunity.lead_classification, "Hot")
+		self.assertNotEqual(opportunity.sales_person, "_Test Not Allowed")
+
+	def test_opportunity_args_invalid_values_are_skipped(self):
+		sender = make_email()
+		allowed_fields = ["lead_classification", "transaction_date", "remarks", "source"]
+		frappe.local.message_log = []
+		with patch_hooks({"allowed_lead_form_opportunity_fields": allowed_fields}):
+			submit_lead_form(
+				sender=sender,
+				opportunity_args={
+					"lead_classification": "Very Hot",
+					"transaction_date": "not a date",
+					"remarks": {"nested": "object"},
+					"source": {"name": "Advertisement"},
+				},
+			)
+
+		lead = frappe.db.get_value("Lead", {"email_id": sender})
+		opportunity = frappe.db.get_value("Opportunity", {"party_name": lead}, allowed_fields, as_dict=True)
+		self.assertFalse(opportunity.lead_classification)
+		self.assertEqual(opportunity.transaction_date, getdate())
+		self.assertFalse(opportunity.remarks)
+		self.assertFalse(opportunity.source)
+		self.assertFalse(frappe.local.message_log)
+
+	def test_opportunity_args_values_are_converted(self):
+		sender = make_email()
+		with patch_hooks({"allowed_lead_form_opportunity_fields": ["lead_classification", "transaction_date"]}):
+			submit_lead_form(
+				sender=sender,
+				opportunity_args={"lead_classification": "Warm", "transaction_date": "2026-11-20"},
+			)
+
+		lead = frappe.db.get_value("Lead", {"email_id": sender})
+		opportunity = frappe.db.get_value(
+			"Opportunity", {"party_name": lead}, ["lead_classification", "transaction_date"], as_dict=True,
+		)
+		self.assertEqual(opportunity.lead_classification, "Warm")
+		self.assertEqual(opportunity.transaction_date, getdate("2026-11-20"))
+
+	def test_opportunity_args_default_fields(self):
+		sender = make_email()
 		submit_lead_form(
 			sender=sender,
-			opportunity_args=json.dumps(
-				{
-					"lead_classification": "Hot",
-					"not_a_field": "ignored",
-				},
-			),
+			opportunity_args={
+				"source": "Advertisement",
+				"campaign": "_Test Missing Campaign",
+			},
 		)
 
 		lead = frappe.db.get_value("Lead", {"email_id": sender})
-		self.assertEqual(
-			frappe.db.get_value("Opportunity", {"party_name": lead}, "lead_classification"), "Hot",
+		opportunity = frappe.db.get_value(
+			"Opportunity", {"party_name": lead}, ["source", "campaign"], as_dict=True,
 		)
+		self.assertEqual(opportunity.source, "Advertisement")
+		self.assertFalse(opportunity.campaign)
 
 
 def get_opportunity(**kwargs):

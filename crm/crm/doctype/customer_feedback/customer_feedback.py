@@ -105,7 +105,7 @@ class CustomerFeedback(Document):
 			self.make_communication_doc("customer_feedback", set_timeline_links=True).insert()
 
 	def make_communication_doc(self, for_field, set_timeline_links):
-		subject = _("Customer Feedback") + (_(" Remarks") if for_field == "contact_remarks" else "")
+		subject = _("Customer Feedback Remarks") if for_field == "contact_remarks" else _("Customer Feedback")
 
 		if self.reference_doctype and self.reference_name:
 			subject += " ({0})".format(self.reference_name)
@@ -195,7 +195,7 @@ class CustomerFeedback(Document):
 
 
 @frappe.whitelist()
-def get_customer_details(args):
+def get_customer_details(args: str | dict):
 	from frappe.model.base_document import get_controller
 
 	if isinstance(args, str):
@@ -240,12 +240,12 @@ def get_customer_feedback_contact_details(args):
 
 
 @frappe.whitelist()
-def submit_customer_feedback(reference_doctype, reference_name, feedback_or_remark, message):
+def submit_customer_feedback(reference_doctype: str, reference_name: str, feedback_or_remark: str, message: str):
 	if not message:
 		frappe.throw(_("Message cannot be empty"))
 
 	if not frappe.db.exists(reference_doctype, reference_name):
-		frappe.throw(_("{0} {1} does not exist".format(reference_doctype, reference_name)))
+		frappe.throw(_("{0} {1} does not exist").format(_(reference_doctype), reference_name))
 
 	feedback_doc = get_customer_feedback_doc(reference_doctype, reference_name)
 

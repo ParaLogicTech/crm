@@ -5,13 +5,13 @@ from frappe.utils import cint, cstr
 
 
 @frappe.whitelist()
-def get_primary_contact(doctype, name):
+def get_primary_contact(doctype: str, name: str | None):
 	primary_contact = frappe.utils.call_hook_method("get_primary_contact", doctype, name)
 	return primary_contact or get_default_contact(doctype, name)
 
 
 @frappe.whitelist()
-def get_primary_address(doctype, name, shipping_address=False):
+def get_primary_address(doctype: str, name: str | None, shipping_address: bool = False):
 	shipping_address = cint(shipping_address)
 	if shipping_address:
 		return get_shipping_address(doctype, name)
@@ -21,7 +21,7 @@ def get_primary_address(doctype, name, shipping_address=False):
 
 
 @frappe.whitelist()
-def get_shipping_address(doctype, name):
+def get_shipping_address(doctype: str, name: str | None):
 	shipping_address = frappe.utils.call_hook_method("get_shipping_address", doctype, name)
 
 	if not shipping_address:
@@ -34,7 +34,7 @@ def get_shipping_address(doctype, name):
 
 
 @frappe.whitelist()
-def get_address_display(address=None, lead=None):
+def get_address_display(address: str | None = None, lead: str | None = None):
 	return render_address(address, lead=lead, check_permissions=True)
 
 
@@ -56,11 +56,11 @@ def render_address(address=None, lead=None, check_permissions=False):
 
 @frappe.whitelist()
 def get_contact_details(
-	contact=None,
-	lead=None,
-	get_contact_no_list=False,
-	link_doctype=None,
-	link_name=None,
+	contact: str | None = None,
+	lead: str | None = None,
+	get_contact_no_list: bool = False,
+	link_doctype: str | None = None,
+	link_name: str | None = None,
 ):
 	return _get_contact_details(
 		contact,
@@ -101,7 +101,7 @@ def _get_contact_details(
 
 
 @frappe.whitelist()
-def get_last_interaction(contact=None, lead=None):
+def get_last_interaction(contact: str | None = None, lead: str | None = None):
 
 	if not contact and not lead:
 		return
