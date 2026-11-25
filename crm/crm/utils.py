@@ -126,7 +126,7 @@ def get_last_interaction(contact: str | None = None, lead: str | None = None):
 				FROM `tabCommunication`
 				WHERE `sent_or_received`='Received'
 				AND ({})
-				ORDER BY `modified`
+				ORDER BY `creation` DESC
 				LIMIT 1
 			""".format(query_condition), values, as_dict=1)  # nosec
 
