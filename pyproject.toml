@@ -4,7 +4,7 @@ authors = [
     { name = "ParaLogic", email = "info@paralogic.io"}
 ]
 description = "ParaLogic CRM"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 readme = "README.md"
 dynamic = ["version"]
 dependencies = [
@@ -25,7 +25,7 @@ frappe = ">=15.0.0,<16.0.0"
 # Lint and autofix only, no formatter: line breaks and bracket layout stay as written
 [tool.ruff]
 line-length = 120
-target-version = "py310"
+target-version = "py311"
 
 [tool.ruff.lint]
 # pycodestyle's whitespace and blank-line rules (E1, E2, E3) are preview-only
