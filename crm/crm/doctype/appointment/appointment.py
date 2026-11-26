@@ -531,7 +531,7 @@ class Appointment(StatusUpdater):
 			return ""
 
 	def set_can_notify_onload(self):
-		notification_types = [
+		notification_keys = [
 			"Appointment Confirmation",
 			"Appointment Reminder",
 			"Appointment Cancellation",
@@ -539,8 +539,8 @@ class Appointment(StatusUpdater):
 		]
 
 		can_notify = frappe._dict()
-		for notification_type in notification_types:
-			can_notify[notification_type] = self.validate_notification(notification_type, throw=False)
+		for notification_key in notification_keys:
+			can_notify[notification_key] = self.validate_notification(notification_key, throw=False)
 
 		self.set_onload("can_notify", can_notify)
 
@@ -557,14 +557,14 @@ class Appointment(StatusUpdater):
 		if self.name in appointments_for_reminder:
 			return get_appointment_reminders_scheduled_time(reminder_date)
 
-	def validate_notification(self, notification_type=None, child_doctype=None, child_name=None, throw=False):
-		if notification_type == "Appointment Cancellation":
+	def validate_notification(self, notification_key=None, child_doctype=None, child_name=None, throw=False):
+		if notification_key == "Appointment Cancellation":
 			# Must be cancelled
 			if self.docstatus != 2:
 				if throw:
 					frappe.throw(_("Cannot send Appointment Cancellation notification because Appointment is not cancelled"))
 				return False
-		elif notification_type in ("Appointment Confirmation", "Appointment Reminder", "Appointment Missed"):
+		elif notification_key in ("Appointment Confirmation", "Appointment Reminder", "Appointment Missed"):
 			# Must be submitted
 			if self.docstatus != 1:
 				if throw:
@@ -572,24 +572,24 @@ class Appointment(StatusUpdater):
 				return False
 
 		# Must be Open
-		if notification_type in ("Appointment Confirmation", "Appointment Reminder"):
+		if notification_key in ("Appointment Confirmation", "Appointment Reminder"):
 			if self.status != "Open":
 				if throw:
 					frappe.throw(_("Cannot send {0} notification because Appointment status is not 'Open'")
-						.format(notification_type))
+						.format(notification_key))
 				return False
 
 		# Must be Missed
-		if notification_type == "Appointment Missed":
+		if notification_key == "Appointment Missed":
 			if self.status != "Missed":
 				if throw:
 					frappe.throw(_("Cannot send {0} notification because Appointment status is not 'Missed'")
-						.format(notification_type))
+						.format(notification_key))
 				return False
 
 		# Appointment Start Date/Time is in the past or End Date/Time if cancellation
-		if notification_type in ("Appointment Confirmation", "Appointment Reminder", "Appointment Cancellation"):
-			if notification_type == "Appointment Cancellation":
+		if notification_key in ("Appointment Confirmation", "Appointment Reminder", "Appointment Cancellation"):
+			if notification_key == "Appointment Cancellation":
 				appointment_dt = get_datetime(self.end_dt or self.scheduled_dt)
 			else:
 				appointment_dt = get_datetime(self.scheduled_dt)
@@ -597,7 +597,7 @@ class Appointment(StatusUpdater):
 			if appointment_dt <= now_datetime():
 				if throw:
 					frappe.throw(_("Cannot send {0} notification after Appointment Time has passed")
-						.format(notification_type))
+						.format(notification_key))
 				return False
 
 		return True
@@ -1072,7 +1072,7 @@ def send_appointment_missed_notifications():
 def automated_reminder_enabled():
 	return has_notification(
 		"Appointment",
-		notification_type="Appointment Reminder",
+		notification_key="Appointment Reminder",
 		trigger_method="notify_appointment_reminder",
 	)
 
@@ -1081,7 +1081,7 @@ def automated_missed_notification_enabled():
 	return (
 		has_notification(
 			"Appointment",
-			notification_type="Appointment Missed",
+			notification_key="Appointment Missed",
 			trigger_method="notify_appointment_missed",
 		)
 		and cint(frappe.get_cached_value("Appointment Booking Settings", None, "auto_mark_missed_days")) > 0
@@ -1114,7 +1114,7 @@ def get_appointments_for_reminder_notification(reminder_date=None, appointments=
 		select a.name
 		from `tabAppointment` a
 		left join `tabNotification Count` n on n.reference_doctype = 'Appointment' and n.reference_name = a.name
-			and n.notification_type = 'Appointment Reminder'
+			and n.notification_key = 'Appointment Reminder'
 		where a.docstatus = 1
 			and a.status = 'Open'
 			and a.scheduled_date = %(appointment_date)s
@@ -1157,7 +1157,7 @@ def get_appointments_for_missed_notification(notification_date=None, appointment
 		select a.name
 		from `tabAppointment` a
 		left join `tabNotification Count` n on n.reference_doctype = 'Appointment' and n.reference_name = a.name
-			and n.notification_type = 'Appointment Missed'
+			and n.notification_key = 'Appointment Missed'
 		where a.docstatus = 1
 			and a.status = 'Missed'
 			and a.scheduled_date = %(appointment_date)s
