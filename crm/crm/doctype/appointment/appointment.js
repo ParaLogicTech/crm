@@ -8,8 +8,8 @@ frappe.provide("crm");
 crm.Appointment = class Appointment extends crm.QuickContacts {
 	setup() {
 		this.frm.custom_make_buttons = {
-			'Appointment': 'Reschedule',
-		}
+			"Appointment": "Reschedule",
+		};
 	}
 
 	refresh() {
@@ -18,7 +18,7 @@ crm.Appointment = class Appointment extends crm.QuickContacts {
 		this.set_dynamic_field_label();
 		this.set_dynamic_link();
 
-		this.frm.trigger('set_disallow_on_submit_fields_read_only');
+		this.frm.trigger("set_disallow_on_submit_fields_read_only");
 		this.setup_dashboard();
 
 		this.set_advisor_sales_person_from_user();
@@ -39,22 +39,22 @@ crm.Appointment = class Appointment extends crm.QuickContacts {
 			return {
 				"filters": {
 					"name": ["in", crm.utils.get_appointment_allowed_party_types()],
-				}
-			}
+				},
+			};
 		});
 
-		this.frm.set_query('customer_address', () => {
+		this.frm.set_query("customer_address", () => {
 			return frappe.contacts.address_query(this.frm.doc);
 		});
-		this.frm.set_query('contact_person', () => {
+		this.frm.set_query("contact_person", () => {
 			return frappe.contacts.contact_query(this.frm.doc);
 		});
 
-		this.frm.set_query('secondary_contact_person', () => {
+		this.frm.set_query("secondary_contact_person", () => {
 			return frappe.contacts.contact_query(this.frm.doc);
 		});
 
-		this.frm.set_query('service_advisor', () => {
+		this.frm.set_query("service_advisor", () => {
 			let filters = {
 				appointment_type: this.frm.doc.appointment_type,
 			};
@@ -69,7 +69,7 @@ crm.Appointment = class Appointment extends crm.QuickContacts {
 			return {
 				query: "crm.crm.doctype.appointment.appointment.appointment_service_advisor_query",
 				filters: filters,
-			}
+			};
 		});
 	}
 
@@ -91,7 +91,7 @@ crm.Appointment = class Appointment extends crm.QuickContacts {
 		if (this.frm.doc.docstatus == 1) {
 			if (this.frm.doc.status != "Rescheduled" && this.frm.has_perm("write")) {
 				if (!this.frm.doc.check_in_dt) {
-					this.frm.add_custom_button(__('Check In'), () => this.update_status("Checked In"),
+					this.frm.add_custom_button(__("Check In"), () => this.update_status("Checked In"),
 						__("Set Status"));
 				}
 
@@ -99,17 +99,17 @@ crm.Appointment = class Appointment extends crm.QuickContacts {
 					["Open", "Checked In", "Missed"].includes(this.frm.doc.status)
 					&& frappe.model.can_create("Appointment")
 				) {
-					this.frm.add_custom_button(__('Reschedule'), () => this.reschedule_appointment(),
+					this.frm.add_custom_button(__("Reschedule"), () => this.reschedule_appointment(),
 						__("Set Status"));
 				}
 
 				if (!["Missed", "Converted"].includes(this.frm.doc.status)) {
-					this.frm.add_custom_button(__('Missed'), () => this.update_status("Missed"),
+					this.frm.add_custom_button(__("Missed"), () => this.update_status("Missed"),
 						__("Set Status"));
 				}
 
 				if (!["Closed", "Converted"].includes(this.frm.doc.status)) {
-					this.frm.add_custom_button(__('Closed'), () => this.update_status("Closed"),
+					this.frm.add_custom_button(__("Closed"), () => this.update_status("Closed"),
 						__("Set Status"));
 				}
 			}
@@ -119,7 +119,7 @@ crm.Appointment = class Appointment extends crm.QuickContacts {
 				&& this.frm.has_perm("write")
 				&& this.frm.doc.__onload?.can_link_opportunity
 			) {
-				this.frm.add_custom_button(__('Link Opportunity'), () => this.link_with_opportunity(),
+				this.frm.add_custom_button(__("Link Opportunity"), () => this.link_with_opportunity(),
 					__("Set Status"));
 			}
 
@@ -131,7 +131,7 @@ crm.Appointment = class Appointment extends crm.QuickContacts {
 					|| (this.frm.doc.status == "Checked In" && this.frm.doc.is_checked_in)
 				)
 			) {
-				this.frm.add_custom_button(__('Re-Open'), () => this.update_status("Open"),
+				this.frm.add_custom_button(__("Re-Open"), () => this.update_status("Open"),
 					__("Set Status"));
 			}
 		}
@@ -145,13 +145,13 @@ crm.Appointment = class Appointment extends crm.QuickContacts {
 		let me = this;
 
 		// Notification Status
-		let confirmation_count = frappe.get_notification_count(me.frm, 'Appointment Confirmation');
+		let confirmation_count = frappe.get_notification_count(me.frm, "Appointment Confirmation");
 		let confirmation_color = confirmation_count ? "green"
-			: this.can_notify('Appointment Confirmation') ? "yellow" : "light-gray";
-		let confirmation_status = frappe.get_notification_count_str(me.frm, 'Appointment Confirmation');
+			: this.can_notify("Appointment Confirmation") ? "yellow" : "light-gray";
+		let confirmation_status = frappe.get_notification_count_str(me.frm, "Appointment Confirmation");
 
-		let reminder_count = frappe.get_notification_count(me.frm, 'Appointment Reminder');
-		let reminder_status = frappe.get_notification_count_str(me.frm, 'Appointment Reminder');
+		let reminder_count = frappe.get_notification_count(me.frm, "Appointment Reminder");
+		let reminder_status = frappe.get_notification_count_str(me.frm, "Appointment Reminder");
 		let reminder_color = "light-gray";
 
 		if (reminder_count) {
@@ -162,32 +162,32 @@ crm.Appointment = class Appointment extends crm.QuickContacts {
 			reminder_status = __("Scheduled ({0})", [scheduled_reminder_str]);
 		}
 
-		let missed_count = frappe.get_notification_count(me.frm, 'Appointment Missed');
+		let missed_count = frappe.get_notification_count(me.frm, "Appointment Missed");
 		let missed_color = missed_count ? "green"
-			: this.can_notify('Appointment Missed') ? "yellow" : "light-gray";
-		let missed_status = frappe.get_notification_count_str(me.frm, 'Appointment Missed');
+			: this.can_notify("Appointment Missed") ? "yellow" : "light-gray";
+		let missed_status = frappe.get_notification_count_str(me.frm, "Appointment Missed");
 
-		let cancellation_count = frappe.get_notification_count(me.frm, 'Appointment Cancellation');
+		let cancellation_count = frappe.get_notification_count(me.frm, "Appointment Cancellation");
 		let cancellation_color = cancellation_count ? "green"
-			: this.can_notify('Appointment Cancellation') ? "yellow" : "light-gray";
-		let cancellation_status = frappe.get_notification_count_str(me.frm, 'Appointment Cancellation');
+			: this.can_notify("Appointment Cancellation") ? "yellow" : "light-gray";
+		let cancellation_status = frappe.get_notification_count_str(me.frm, "Appointment Cancellation");
 
-		me.frm.dashboard.add_indicator(__('Appointment Confirmation: {0}', [confirmation_status]), confirmation_color);
-		me.frm.dashboard.add_indicator(__('Appointment Reminder: {0}', [reminder_status]), reminder_color);
+		me.frm.dashboard.add_indicator(__("Appointment Confirmation: {0}", [confirmation_status]), confirmation_color);
+		me.frm.dashboard.add_indicator(__("Appointment Reminder: {0}", [reminder_status]), reminder_color);
 		if (me.frm.doc.status == "Missed" || missed_count) {
-			me.frm.dashboard.add_indicator(__('Appointment Missed: {0}', [missed_status]), missed_color);
+			me.frm.dashboard.add_indicator(__("Appointment Missed: {0}", [missed_status]), missed_color);
 		}
 		if (me.frm.doc.docstatus == 2 || cancellation_count) {
-			me.frm.dashboard.add_indicator(__('Appointment Cancellation: {0}', [cancellation_status]), cancellation_color);
+			me.frm.dashboard.add_indicator(__("Appointment Cancellation: {0}", [cancellation_status]), cancellation_color);
 		}
 	}
 
 	set_dynamic_link() {
 		frappe.dynamic_link = {
 			doc: this.frm.doc,
-			fieldname: 'party_name',
-			doctype: this.frm.doc.appointment_for || "Lead"
-		}
+			fieldname: "party_name",
+			doctype: this.frm.doc.appointment_for || "Lead",
+		};
 	}
 
 	scheduled_date() {
@@ -196,11 +196,11 @@ crm.Appointment = class Appointment extends crm.QuickContacts {
 	}
 	scheduled_time() {
 		this.set_scheduled_date_time();
-		this.refresh_appointment_slot_picker()
+		this.refresh_appointment_slot_picker();
 	}
 	appointment_duration() {
 		this.set_scheduled_date_time();
-		this.refresh_appointment_slot_picker()
+		this.refresh_appointment_slot_picker();
 	}
 
 	appointment_type() {
@@ -217,8 +217,8 @@ crm.Appointment = class Appointment extends crm.QuickContacts {
 				},
 				callback: (r) => {
 					this.setup_min_date(r.message);
-				}
-			})
+				},
+			});
 		}
 	}
 
@@ -231,9 +231,9 @@ crm.Appointment = class Appointment extends crm.QuickContacts {
 			this.frm.doc.scheduled_time = moment(timeslot_start_obj).format(frappe.defaultTimeFormat);
 			this.frm.doc.appointment_duration = cint(timeslot_duration);
 
-			this.frm.refresh_field('scheduled_date');
-			this.frm.refresh_field('scheduled_time');
-			this.frm.refresh_field('appointment_duration');
+			this.frm.refresh_field("scheduled_date");
+			this.frm.refresh_field("scheduled_time");
+			this.frm.refresh_field("appointment_duration");
 			this.frm.dirty();
 
 			this.set_scheduled_date_time();
@@ -248,7 +248,7 @@ crm.Appointment = class Appointment extends crm.QuickContacts {
 	set_scheduled_date_time() {
 		if (this.frm.doc.scheduled_date) {
 			let scheduled_date_obj = frappe.datetime.str_to_obj(this.frm.doc.scheduled_date);
-			this.frm.doc.scheduled_day_of_week = moment(scheduled_date_obj).format('dddd');
+			this.frm.doc.scheduled_day_of_week = moment(scheduled_date_obj).format("dddd");
 		} else {
 			this.frm.doc.scheduled_day_of_week = null;
 		}
@@ -257,7 +257,7 @@ crm.Appointment = class Appointment extends crm.QuickContacts {
 			let scheduled_dt_obj = frappe.datetime.str_to_obj(this.frm.doc.scheduled_date + " " + this.frm.doc.scheduled_time);
 			let scheduled_dt_str = frappe.datetime.get_datetime_as_string(scheduled_dt_obj);
 
-			let end_dt_obj = moment(scheduled_dt_obj).add(cint(this.frm.doc.appointment_duration), 'minutes').toDate();
+			let end_dt_obj = moment(scheduled_dt_obj).add(cint(this.frm.doc.appointment_duration), "minutes").toDate();
 			let end_dt_str = frappe.datetime.get_datetime_as_string(end_dt_obj);
 
 			this.frm.doc.scheduled_dt = scheduled_dt_str;
@@ -267,9 +267,9 @@ crm.Appointment = class Appointment extends crm.QuickContacts {
 			this.frm.doc.end_dt = null;
 		}
 
-		this.frm.refresh_field('scheduled_dt');
-		this.frm.refresh_field('end_dt');
-		this.frm.refresh_field('scheduled_day_of_week');
+		this.frm.refresh_field("scheduled_dt");
+		this.frm.refresh_field("end_dt");
+		this.frm.refresh_field("scheduled_day_of_week");
 	}
 
 	make_appointment_slot_picker() {
@@ -316,16 +316,16 @@ crm.Appointment = class Appointment extends crm.QuickContacts {
 						doctype: me.frm.doc.doctype,
 						appointment_for: me.frm.doc.appointment_for,
 						party_name: me.frm.doc.party_name,
-					}
+					},
 				},
-				callback: function (r) {
+				callback: function(r) {
 					if (r.message && !r.exc) {
 						frappe.run_serially([
 							() => me.frm.set_value(r.message),
 							() => me.setup_contact_no_fields(r.message.contact_nos),
 						]);
 					}
-				}
+				},
 			});
 		}
 	}
@@ -372,7 +372,7 @@ crm.Appointment = class Appointment extends crm.QuickContacts {
 		this.frm.check_if_unsaved();
 		frappe.model.open_mapped_doc({
 			method: "crm.crm.doctype.appointment.appointment.get_rescheduled_appointment",
-			frm: this.frm
+			frm: this.frm,
 		});
 	}
 
@@ -383,7 +383,7 @@ crm.Appointment = class Appointment extends crm.QuickContacts {
 			method: "crm.crm.doctype.appointment.appointment.update_status",
 			args: {
 				appointment: this.frm.doc.name,
-				status: status
+				status: status,
 			},
 			callback: () => {
 				this.frm.reload_doc();
@@ -417,13 +417,13 @@ crm.Appointment = class Appointment extends crm.QuickContacts {
 							dialog.set_value("customer_name", null);
 							dialog.set_value("sales_person", null);
 						}
-					}
+					},
 				},
 				{
 					fieldtype: "Data",
 					label: __("Customer Name"),
 					fieldname: "customer_name",
-					read_only: 1
+					read_only: 1,
 				},
 				{
 					fieldtype: "Data",
@@ -431,7 +431,7 @@ crm.Appointment = class Appointment extends crm.QuickContacts {
 					fieldname: "sales_person",
 					read_only: 1,
 				},
-			]
+			],
 		});
 
 		dialog.set_primary_action(__("Link"), () => {
@@ -447,7 +447,7 @@ crm.Appointment = class Appointment extends crm.QuickContacts {
 						dialog.hide();
 						this.frm.reload_doc();
 					}
-				}
+				},
 			});
 		});
 		dialog.show();
