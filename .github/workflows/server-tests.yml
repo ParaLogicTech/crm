@@ -106,8 +106,14 @@ jobs:
             frappe_pr=$(grep -ioE "depends on ParaLogicTech/frappe#[0-9]+" <<< "${body}" | head -n 1 | grep -oE "[0-9]+$" || true)
 
             if [ -n "${frappe_pr}" ]; then
-              read -r merged head_repo head_ref < <(gh api "repos/ParaLogicTech/frappe/pulls/${frappe_pr}" \
-                --jq "[.merged, .head.repo.full_name // \"\", .head.ref] | @tsv")
+              if ! pr_info=$(gh api "repos/ParaLogicTech/frappe/pulls/${frappe_pr}" \
+                --jq "[(.merged | tostring), .head.repo.full_name // \"\", .head.ref] | join(\"\u001f\")"); then
+                echo "::error::Can't read ParaLogicTech/frappe#${frappe_pr}, named in this PR's description"
+                exit 1
+              fi
+
+              # Split on the unit separator: tabs or spaces would merge an empty head repo into the next field
+              IFS=$'\x1f' read -r merged head_repo head_ref <<< "${pr_info}"
 
               if [ "${merged}" = "true" ]; then
                 echo "ParaLogicTech/frappe#${frappe_pr} is merged, using ${repo}@${branch}"
@@ -132,6 +138,7 @@ jobs:
 
       # crm depends on ParaLogic's frappe fork, not stock frappe
       - name: Setup Bench
+        id: bench
         run: |
           pip install frappe-bench
           bench init --skip-assets --python "$(which python)" \
@@ -170,8 +177,9 @@ jobs:
           bench --site test_site set-config allow_tests true
           bench --site test_site run-tests --app crm
 
+      # Only once the bench exists: an earlier failure has no bench output to show
       - name: Show bench output
-        if: ${{ always() }}
+        if: ${{ always() && steps.bench.outcome == 'success' }}
         working-directory: /home/runner/frappe-bench
         run: |
           cat bench_start.log || true
