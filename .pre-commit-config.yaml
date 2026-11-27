@@ -39,12 +39,11 @@ repos:
           - "@eslint/js@9.39.5"
           - "@stylistic/eslint-plugin@5.10.0"
           - "globals@17.14.0"
-        # Ignore files that contain jinja (not valid JS) or bundles
+        # Ignore bundles
         exclude: |
             (?x)^(
                 crm/public/dist/.*|
-                .*node_modules.*|
-                crm/crm/doctype/appointment/appointment.js
+                .*node_modules.*
             )$
 
   - repo: https://github.com/alessandrojcm/commitlint-pre-commit-hook
